@@ -497,7 +497,7 @@ tr.clickable{cursor:pointer}
                 </select>
               </div>
             </div>
-            <div id="asg-table-wrap"><div class="table-empty">尚無指定人員</div></div>
+            <div id="asg-table-wrap"><div class="table-empty">載入中…</div></div>
           </div>
         </div>
 
@@ -1124,6 +1124,8 @@ function openCourseDetail(courseId){
   document.getElementById('course-detail-view').style.display = 'block';
   document.getElementById('cd-title').textContent = '載入中…';
   document.getElementById('cd-sub').textContent = '';
+  document.getElementById('asg-table-wrap').innerHTML = '<div class="table-empty">載入中…</div>';
+  document.getElementById('asg-count').textContent = '';
   showCourseSubtab('basic');
 
   fetch(`${GS_URL}?action=getCourse&courseId=${encodeURIComponent(currentCourseId)}`)
