@@ -1,0 +1,2232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教育訓練系統管理後台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+:root{
+  --ink:#1a1814;--ink2:#3d3a34;--ink3:#7a7570;
+  --paper:#faf9f6;--paper2:#f2f0eb;--paper3:#e8e5de;
+  --accent:#e81414;--accent2:#c00f0f;--accent-light:#fef0f0;
+  --red:#8b2020;--red-light:#fde8e8;
+  --green:#1a7a3a;--green-light:#e8f5ed;
+  --blue:#1a5fa8;--blue-light:#e8f0fb;
+  --radius:4px;--radius-lg:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+input,select,textarea{font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--paper3);border-radius:var(--radius);padding:9px 13px;width:100%;outline:none;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,20,20,.15)}
+button{font-family:'Noto Sans TC',sans-serif;cursor:pointer;border:none;border-radius:var(--radius);font-size:13px;font-weight:500;transition:all .15s}
+
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+
+/* ── LOGIN ── */
+#s-login{align-items:center;justify-content:center;background:var(--paper)}
+.login-wrap{width:100%;max-width:380px;padding:20px}
+.login-logo{text-align:center;margin-bottom:2rem}
+.login-logo img{height:88.5px;margin-bottom:.75rem}
+.login-logo h1{font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:.25rem}
+.login-logo p{font-size:.8rem;color:var(--ink3)}
+.login-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--paper3);padding:2rem;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.login-card h2{font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:1.25rem}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:.78rem;font-weight:700;color:var(--ink2);margin-bottom:.35rem}
+.login-err{background:var(--red-light);color:var(--red);font-size:.8rem;padding:.6rem .9rem;border-radius:var(--radius);margin-bottom:.9rem;display:none}
+.btn-login{width:100%;background:var(--accent);color:#fff;padding:.75rem;font-size:.9rem;font-weight:700;border-radius:var(--radius);margin-top:.5rem}
+.btn-login:hover{background:var(--accent2)}
+
+/* ── ADMIN LAYOUT ── */
+#s-admin{flex-direction:row}
+.sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid var(--paper3);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-logo{padding:1.2rem 1.4rem;border-bottom:1px solid var(--paper3)}
+.sb-logo img{height:51px}
+.sb-logo p{font-size:.72rem;color:var(--ink3);margin-top:.25rem}
+.sb-nav{flex:1;padding:.6rem 0}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.65rem 1.4rem;font-size:.85rem;color:var(--ink3);cursor:pointer;transition:all .12s;border-left:3px solid transparent}
+.nav-item:hover{background:var(--paper);color:var(--ink)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.nav-item .ni{font-size:1rem;width:18px;text-align:center}
+.sb-footer{padding:1rem 1.4rem;border-top:1px solid var(--paper3)}
+.sb-user{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
+.su-av{width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;font-weight:700;flex-shrink:0}
+.su-name{font-size:.82rem;font-weight:500;color:var(--ink)}
+.su-role{font-size:.7rem;color:var(--ink3)}
+.btn-logout{width:100%;background:var(--paper2);color:var(--ink2);padding:.55rem;border-radius:var(--radius);font-size:.8rem}
+.btn-logout:hover{background:var(--paper3)}
+
+.admin-main{flex:1;overflow-y:auto}
+.tab-content{display:none;padding:2rem 2.25rem;max-width:1200px}
+.tab-content.active{display:block}
+.page-title{font-size:1.4rem;font-weight:700;margin-bottom:.25rem}
+.page-sub{font-size:.85rem;color:var(--ink3);margin-bottom:1.75rem}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+#stat-grid{grid-template-columns:repeat(5,1fr)}
+#course-stat-grid{grid-template-columns:repeat(3,1fr)}
+.stat-card{background:#fff;border:1px solid var(--paper3);border-radius:var(--radius-lg);padding:1.1rem 1.25rem}
+.sc-val{font-size:1.75rem;font-weight:700;margin-bottom:.2rem}
+.sc-val.red{color:var(--red)}.sc-val.green{color:var(--green)}.sc-val.blue{color:var(--blue)}.sc-val.ink{color:var(--ink)}
+.sc-lbl{font-size:.75rem;color:var(--ink3)}
+
+/* TABLE */
+.table-wrap{background:#fff;border:1px solid var(--paper3);border-radius:var(--radius-lg);overflow:hidden}
+.table-head{padding:1rem 1.25rem;border-bottom:1px solid var(--paper3);display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.table-head h3{font-size:.95rem;font-weight:700}
+.table-actions{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.search-box{position:relative}
+.search-box input{padding:.5rem .75rem .5rem 2rem;font-size:.82rem;width:200px}
+.search-box .si{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:.85rem}
+.filter-select{width:120px;padding:.5rem .75rem;font-size:.82rem}
+table{width:100%;border-collapse:collapse}
+th{font-size:.75rem;font-weight:700;color:var(--ink3);text-align:left;padding:.65rem 1rem;background:var(--paper2);border-bottom:1px solid var(--paper3);white-space:nowrap}
+td{font-size:.85rem;padding:.75rem 1rem;border-bottom:1px solid var(--paper3);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--paper)}
+tr.clickable{cursor:pointer}
+.badge{display:inline-flex;align-items:center;font-size:.75rem;font-weight:700;padding:.2rem .65rem;border-radius:12px}
+.badge.pass{background:var(--green-light);color:var(--green)}
+.badge.fail{background:var(--red-light);color:var(--red)}
+.badge.neutral{background:var(--paper2);color:var(--ink3)}
+.table-empty{padding:3rem;text-align:center;color:var(--ink3);font-size:.9rem}
+#dash-course-table table th, #dash-course-table table td, #course-table-wrap table th, #course-table-wrap table td{text-align:center}
+
+/* BUTTONS */
+.btn-sm{padding:.45rem .9rem;font-size:.78rem}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-secondary{background:transparent;color:var(--ink2);border:1px solid var(--paper3)}
+.btn-secondary:hover{background:var(--paper2)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#14602e}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#6b1818}
+
+/* LOADING */
+.loading-wrap{padding:4rem;text-align:center;color:var(--ink3)}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--paper3);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:.75rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:1.5rem}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:560px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column}
+#modal-emp-courses .modal{max-width:780px}
+.modal.wide{max-width:720px}
+.modal-head{padding:1.1rem 1.4rem;border-bottom:1px solid var(--paper3);display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-size:1rem;font-weight:700}
+.btn-close{background:var(--paper2);color:var(--ink2);width:28px;height:28px;border-radius:50%;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:1.4rem;overflow-y:auto;flex:1}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem}
+.detail-item{background:var(--paper2);border-radius:var(--radius);padding:.75rem 1rem}
+.detail-item .lbl{font-size:.72rem;color:var(--ink3);margin-bottom:.2rem}
+.detail-item .val{font-size:.9rem;font-weight:500}
+.score-big{text-align:center;padding:1.25rem;background:var(--paper2);border-radius:var(--radius-lg);margin-bottom:1rem}
+.score-big .num{font-size:2.5rem;font-weight:700}
+.score-big .num.pass{color:var(--green)}.score-big .num.fail{color:var(--red)}
+.score-big .sub{font-size:.82rem;color:var(--ink3);margin-top:.2rem}
+
+/* ADMIN MANAGEMENT */
+.admin-list{display:flex;flex-direction:column;gap:0}
+.admin-row{display:flex;align-items:center;gap:1rem;padding:1rem 1.4rem;border-bottom:1px solid var(--paper3)}
+.admin-row:last-child{border-bottom:none}
+.admin-av{width:38px;height:38px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0}
+.admin-info{flex:1;min-width:0}
+.admin-name{font-size:.9rem;font-weight:700;color:var(--ink)}
+.admin-meta{font-size:.78rem;color:var(--ink3);margin-top:.15rem}
+.admin-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.role-badge{font-size:.72rem;font-weight:700;padding:.2rem .75rem;border-radius:12px;background:var(--accent-light);color:var(--accent2);border:1px solid rgba(232,20,20,.25)}
+
+/* MODAL FORM */
+.modal-form .form-group{margin-bottom:1rem}
+.modal-form label{display:block;font-size:.78rem;font-weight:700;color:var(--ink2);margin-bottom:.35rem}
+.modal-form input,.modal-form select{width:100%}
+.form-hint{font-size:.72rem;color:var(--ink3);margin-top:.25rem}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--paper3);border-radius:var(--radius-lg);padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-light)}
+.upload-zone p{color:var(--ink3);font-size:.85rem;margin-top:.5rem}
+.upload-zone input[type=file]{display:none}
+
+/* NOTIFICATION / GENERIC CARDS */
+.notif-card{background:#fff;border:1px solid var(--paper3);border-radius:var(--radius-lg);padding:1.4rem;margin-bottom:1rem}
+.notif-card h3{font-size:.95rem;font-weight:700;margin-bottom:.75rem;padding-bottom:.6rem;border-bottom:1px solid var(--paper3)}
+.notif-row{display:flex;align-items:center;gap:1rem;margin-bottom:.75rem}
+.notif-row label{font-size:.85rem;color:var(--ink2);width:160px;flex-shrink:0}
+.notif-row input[type=date],.notif-row input[type=number]{max-width:200px}
+.toggle-wrap{display:flex;align-items:center;gap:.75rem}
+.toggle{position:relative;display:inline-block;width:44px;height:24px}
+.toggle input{display:none}
+.toggle-slider{position:absolute;inset:0;background:var(--paper3);border-radius:12px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:.4rem}
+.status-dot.on{background:var(--green)}.status-dot.off{background:var(--ink3)}
+
+/* VIDEO MANAGEMENT */
+.video-preview-wrap{background:#000;border-radius:var(--radius-lg);overflow:hidden;aspect-ratio:16/9;width:100%;max-width:640px;margin-bottom:1rem;position:relative}
+.video-preview-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.video-preview-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;font-size:.85rem;gap:.5rem}
+.video-preview-placeholder .ph-icon{font-size:2.5rem}
+.vid-row{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem}
+.vid-row label{font-size:.85rem;color:var(--ink2);width:160px;flex-shrink:0;padding-top:.6rem}
+.vid-row .vid-input-wrap{flex:1}
+.vid-row input{width:100%}
+.vid-hint{font-size:.75rem;color:var(--ink3);margin-top:.35rem;line-height:1.5}
+.vid-status{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;padding:.3rem .75rem;border-radius:12px;margin-left:.75rem}
+.vid-status.ok{background:var(--green-light);color:var(--green)}
+.vid-status.err{background:var(--red-light);color:var(--red)}
+.vid-status.loading{background:var(--paper2);color:var(--ink3)}
+
+/* COURSE DETAIL */
+.back-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--ink3);font-size:.85rem;cursor:pointer;margin-bottom:1rem}
+.back-link:hover{color:var(--accent)}
+.course-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.subtab-bar{display:flex;gap:.25rem;border-bottom:1px solid var(--paper3);margin-bottom:1.5rem;flex-wrap:wrap}
+.subtab-item{padding:.65rem 1.1rem;font-size:.85rem;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;font-weight:500;white-space:nowrap}
+.subtab-item:hover{color:var(--ink)}
+.subtab-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.subtab-pane{display:none}
+.subtab-pane.active{display:block}
+
+/* QUIZ EDITOR */
+.qz-editor{display:flex;flex-direction:column;gap:1rem;margin-bottom:1rem}
+.qz-row{background:#fff;border:1px solid var(--paper3);border-radius:var(--radius-lg);padding:1.1rem}
+.qz-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.qz-row-head .qz-num{font-size:.8rem;font-weight:700;color:var(--ink3)}
+.qz-opt-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem}
+.qz-opt-row input[type=radio]{width:auto;flex-shrink:0;accent-color:var(--accent)}
+.qz-opt-row input[type=text]{flex:1}
+.qz-opt-label{width:20px;flex-shrink:0;font-size:.8rem;font-weight:700;color:var(--ink3)}
+.qz-hint{font-size:.72rem;color:var(--ink3);margin-top:.2rem}
+
+/* ASSIGNEE FILTER */
+.filter-row{display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem}
+.filter-row .form-group{margin-bottom:0;min-width:170px}
+.candidate-list{border:1px solid var(--paper3);border-radius:var(--radius-lg);max-height:280px;overflow-y:auto;margin-bottom:.9rem;background:#fff}
+.cand-row{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-bottom:1px solid var(--paper3);font-size:.85rem}
+.cand-row:last-child{border-bottom:none}
+.cand-row input[type=checkbox]{width:auto}
+.cand-row .cand-meta{color:var(--ink3);font-size:.78rem}
+
+/* PROGRESS BAR */
+.progress-bar-wrap{width:90px;height:8px;background:var(--paper3);border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:.5rem}
+.progress-bar-fill{height:100%;background:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ═══════ LOGIN ═══════ -->
+<div id="s-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <img src="data:image/webp;base64,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">
+      <h1>教育訓練系統管理後台</h1>
+    </div>
+    <div class="login-card">
+      <h2>🔐 管理員登入</h2>
+      <div class="login-err" id="login-err">帳號或密碼錯誤，請重試</div>
+      <div class="form-group"><label>帳號</label><input type="text" id="login-user" placeholder="請輸入帳號" value="admin"></div>
+      <div class="form-group"><label>密碼</label><input type="password" id="login-pwd" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-login" onclick="doLogin()">登入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ADMIN ═══════ -->
+<div id="s-admin" class="screen">
+  <div class="sidebar">
+    <div class="sb-logo">
+      <img src="data:image/webp;base64,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">
+      <p>教育訓練系統管理後台</p>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-item active" onclick="showTab('dashboard')"><span class="ni">📊</span>儀表板</div>
+      <div class="nav-item" onclick="showTab('courses')"><span class="ni">📚</span>課程管理</div>
+      <div class="nav-item" onclick="showTab('employees');loadEmployeeMaster()"><span class="ni">🧑‍🤝‍🧑</span>員工總表</div>
+      <div class="nav-item" onclick="showTab('export');loadExportTab()"><span class="ni">📥</span>檔案下載</div>
+      <div class="nav-item" onclick="showTab('empsync');loadEmpSyncTab()"><span class="ni">🔄</span>同步員工資料設定</div>
+      <div class="nav-item" onclick="showTab('admins');loadAdminsFromGS()"><span class="ni">👤</span>管理員設定</div>
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="su-av" id="sb-avatar">A</div>
+        <div><div class="su-name" id="sb-name">管理員</div><div class="su-role">Administrator</div></div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">登出</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+
+    <!-- DASHBOARD -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="page-title">儀表板</div>
+      <div class="page-sub" id="dash-updated">載入中…</div>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card"><div class="sc-val ink" id="st-active-courses">—</div><div class="sc-lbl">進行中課程總數</div></div>
+        <div class="stat-card"><div class="sc-val ink" id="st-total">—</div><div class="sc-lbl">應完成人次</div></div>
+        <div class="stat-card"><div class="sc-val green" id="st-passed">—</div><div class="sc-lbl">已完成人次</div></div>
+        <div class="stat-card"><div class="sc-val red" id="st-failed">—</div><div class="sc-lbl">未完成人次</div></div>
+        <div class="stat-card"><div class="sc-val blue" id="st-rate">—</div><div class="sc-lbl">整體完成率</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head"><h3>各課程完成狀況</h3><button class="btn-sm btn-primary" onclick="showTab('courses')">前往課程管理 →</button></div>
+        <div id="dash-course-table"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+      </div>
+    </div>
+
+    <!-- COURSES -->
+    <div class="tab-content" id="tab-courses">
+
+      <!-- 課程列表 -->
+      <div id="course-list-view">
+        <div class="page-title">課程管理</div>
+        <div class="page-sub">建立與管理教育訓練課程，每個課程包含影片與選擇性的測驗</div>
+        <div class="stat-grid" id="course-stat-grid">
+          <div class="stat-card"><div class="sc-val ink" id="cst-total">—</div><div class="sc-lbl">課程總數</div></div>
+          <div class="stat-card"><div class="sc-val green" id="cst-active">—</div><div class="sc-lbl">進行中課程總數</div></div>
+          <div class="stat-card"><div class="sc-val red" id="cst-inactive">—</div><div class="sc-lbl">已關閉課程總數</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-head">
+            <h3>課程列表</h3>
+            <div class="table-actions">
+              <select class="filter-select" id="course-type-filter" style="width:140px" onchange="renderCourseTable()"><option value="">所有類型</option></select>
+              <select class="filter-select" id="course-status-filter" style="width:120px" onchange="renderCourseTable()">
+                <option value="active">進行中</option>
+                <option value="">所有狀態</option>
+                <option value="inactive">關閉</option>
+              </select>
+              <button class="btn-sm btn-secondary" onclick="loadCourseList()">🔄 重新整理</button>
+              <button class="btn-sm btn-primary" onclick="openCourseCreateModal()">＋ 新增課程</button>
+            </div>
+          </div>
+          <div id="course-table-wrap"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+        </div>
+      </div>
+
+      <!-- 課程詳細 -->
+      <div id="course-detail-view" style="display:none">
+        <div class="back-link" onclick="backToCourseList()">← 返回課程列表</div>
+        <div class="course-detail-head">
+          <div>
+            <div class="page-title" id="cd-title">課程名稱</div>
+            <div class="page-sub" style="margin-bottom:0" id="cd-sub">—</div>
+          </div>
+          <button class="btn-sm btn-danger" onclick="deleteCurrentCourse()">🗑 刪除課程</button>
+        </div>
+
+        <div class="subtab-bar">
+          <div class="subtab-item active" data-subtab="basic" onclick="showCourseSubtab('basic')">📋 課程基本資訊</div>
+          <div class="subtab-item" data-subtab="video" onclick="showCourseSubtab('video')">🎬 影片設定</div>
+          <div class="subtab-item" data-subtab="quiz" onclick="showCourseSubtab('quiz')">📝 測驗設定</div>
+          <div class="subtab-item" data-subtab="assignees" onclick="showCourseSubtab('assignees')">👥 指定人員</div>
+          <div class="subtab-item" data-subtab="notify" onclick="showCourseSubtab('notify')">🔔 通知設定</div>
+          <div class="subtab-item" data-subtab="records" onclick="showCourseSubtab('records')">📋 觀看／測驗紀錄</div>
+        </div>
+
+        <!-- 課程基本資訊 -->
+        <div class="subtab-pane active" id="sub-basic">
+          <div class="notif-card">
+            <h3>課程基本資訊</h3>
+            <div class="vid-row">
+              <label>課程名稱</label>
+              <div class="vid-input-wrap">
+                <input type="text" id="basic-name-input" placeholder="請輸入課程名稱，例如：職場霸凌防治教育訓練">
+              </div>
+            </div>
+            <div class="vid-row">
+              <label>課程類型</label>
+              <div class="vid-input-wrap">
+                <input type="text" id="basic-type-input" placeholder="例如：法定教育訓練、職能訓練（選填）" list="course-type-datalist">
+              </div>
+            </div>
+            <div class="vid-row">
+              <label>課程時數</label>
+              <div class="vid-input-wrap">
+                <div style="display:flex;align-items:center;gap:.4rem">
+                  <input type="number" id="basic-hours-h" min="0" style="width:80px" placeholder="0">
+                  <span>時</span>
+                  <input type="number" id="basic-hours-m" min="0" max="59" style="width:80px" placeholder="0">
+                  <span>分</span>
+                </div>
+                <div class="vid-hint">選填，例如：3 時 30 分。</div>
+              </div>
+            </div>
+            <div class="vid-row">
+              <label>起始日期</label>
+              <div class="vid-input-wrap">
+                <input type="date" id="basic-start-date" style="max-width:200px">
+                <div class="vid-hint">選填，記錄本課程開始適用／開課的日期。</div>
+              </div>
+            </div>
+            <div class="vid-row">
+              <label>課程狀態</label>
+              <div class="vid-input-wrap">
+                <div class="toggle-wrap">
+                  <label class="toggle"><input type="checkbox" id="course-active-toggle" checked onchange="updateCourseActiveStatus()"><span class="toggle-slider"></span></label>
+                  <span id="course-active-text" style="font-size:.82rem;color:var(--ink3)"><span class="status-dot on"></span>進行中</span>
+                </div>
+                <div class="vid-hint">關閉後，課程列表狀態將顯示為「關閉」，僅供人工識別課程是否仍在使用。</div>
+              </div>
+            </div>
+            <div class="vid-row">
+              <label>備註說明</label>
+              <div class="vid-input-wrap">
+                <textarea id="basic-remarks" rows="3" placeholder="選填，課程相關備註"></textarea>
+              </div>
+            </div>
+            <button class="btn-sm btn-primary" onclick="saveCourseBasicInfoClick()">💾 儲存基本資訊</button>
+            <span id="basic-save-status" style="margin-left:.6rem;font-size:.82rem"></span>
+          </div>
+        </div>
+
+        <!-- 影片設定 -->
+        <div class="subtab-pane" id="sub-video">
+          <div class="notif-card">
+            <h3>影片開關</h3>
+            <div class="notif-row">
+              <label>本課程是否需要觀看影片</label>
+              <div class="toggle-wrap">
+                <label class="toggle"><input type="checkbox" id="video-required-toggle" checked onchange="updateVideoRequiredStatus()"><span class="toggle-slider"></span></label>
+                <span id="video-required-text" style="font-size:.82rem;color:var(--ink3)"><span class="status-dot on"></span>需要</span>
+              </div>
+            </div>
+            <div class="form-hint">關閉後，員工不需要看完影片即可進行測驗；若本課程未啟用測驗，關閉後此課程將永遠不會被標記為完成，除非之後加入測驗。</div>
+          </div>
+          <div class="notif-card">
+            <h3>YouTube 影片設定</h3>
+            <div class="vid-row">
+              <label>YouTube 影片連結</label>
+              <div class="vid-input-wrap">
+                <input type="text" id="vid-link-input" placeholder="https://www.youtube.com/watch?v=…">
+                <div class="vid-hint">請先至 YouTube 上傳影片（可設為「不公開」），再將影片連結貼於此處，系統將自動擷取影片 ID。</div>
+              </div>
+            </div>
+            <div class="vid-row">
+              <label>擷取到的影片 ID</label>
+              <div class="vid-input-wrap">
+                <input type="text" id="vid-id-display" placeholder="自動填入" readonly style="background:var(--paper2);color:var(--ink3)">
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:.75rem;margin-top:.25rem">
+              <button class="btn-sm btn-secondary" onclick="previewVideo()">👁 預覽影片</button>
+              <button class="btn-sm btn-primary" onclick="saveCourseVideo()">💾 儲存並套用</button>
+              <span id="vid-save-status"></span>
+            </div>
+          </div>
+          <div class="notif-card">
+            <h3>影片預覽</h3>
+            <div class="video-preview-wrap" id="vid-preview-wrap">
+              <div class="video-preview-placeholder" id="vid-placeholder">
+                <span class="ph-icon">🎬</span>
+                <span>尚未設定影片</span>
+              </div>
+              <iframe id="vid-preview-iframe" src="" allowfullscreen style="display:none"></iframe>
+            </div>
+            <div style="font-size:.8rem;color:var(--ink3)">✅ YouTube 可精確偵測影片播放完畢，員工看完後系統自動解鎖，無需設定時長；影片實際秒數會於員工首次觀看時自動記錄。</div>
+          </div>
+        </div>
+
+        <!-- 測驗設定 -->
+        <div class="subtab-pane" id="sub-quiz">
+          <div class="notif-card">
+            <h3>測驗開關與及格分數</h3>
+            <div class="notif-row">
+              <label>本課程是否需要測驗</label>
+              <div class="toggle-wrap">
+                <label class="toggle"><input type="checkbox" id="quiz-enabled"><span class="toggle-slider"></span></label>
+                <span id="quiz-enabled-text" style="font-size:.82rem;color:var(--ink3)"><span class="status-dot off"></span>未啟用</span>
+              </div>
+            </div>
+            <div class="notif-row">
+              <label>及格分數（%）</label>
+              <input type="number" id="quiz-pass-score" min="0" max="100" value="60" style="max-width:100px">
+              <span style="font-size:.82rem;color:var(--ink3)">答對題數 ÷ 總題數 ≥ 此分數即算及格</span>
+            </div>
+            <button class="btn-sm btn-primary" onclick="saveCourseQuiz()">💾 儲存測驗設定</button>
+            <span id="quiz-save-status" style="margin-left:.6rem;font-size:.82rem"></span>
+          </div>
+
+          <div class="notif-card">
+            <h3>測驗題目（單選題，數量不限）</h3>
+            <div id="qz-editor" class="qz-editor"></div>
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+              <button class="btn-sm btn-secondary" onclick="addQuestionRow()">＋ 新增題目</button>
+              <button class="btn-sm btn-primary" onclick="saveQuizQuestionsClick()">💾 儲存全部題目</button>
+              <span id="qz-save-status" style="font-size:.82rem"></span>
+            </div>
+            <div class="qz-hint">每題至少填寫選項A、選項B，選項C、D可留空；請選擇正確答案。儲存時將整批取代此課程原有題目。</div>
+          </div>
+        </div>
+
+        <!-- 指定人員 -->
+        <div class="subtab-pane" id="sub-assignees">
+          <div class="notif-card">
+            <h3>依部門／職類篩選加入</h3>
+            <div class="filter-row">
+              <div class="form-group"><label>部門</label><select id="asg-dept-filter" onchange="renderCandidateList()"><option value="">全部部門</option></select></div>
+              <div class="form-group"><label>職類</label><select id="asg-job-filter" onchange="renderCandidateList()"><option value="">全部職類</option></select></div>
+              <div class="form-group" style="flex:1"><label>搜尋姓名／工號</label><input type="text" id="asg-search" placeholder="輸入姓名或工號" oninput="renderCandidateList()"></div>
+              <div class="form-group"><label>批次設定人員完成期限</label><input type="date" id="asg-default-deadline" title="套用到所有勾選人員的預設完成期限，個別人員可再自訂覆蓋"></div>
+            </div>
+            <div style="margin-bottom:.6rem"><label style="font-size:.82rem;color:var(--ink2)"><input type="checkbox" id="asg-select-all" style="width:auto;margin-right:.4rem" onchange="toggleSelectAllCandidates(this)">全選目前篩選結果</label></div>
+            <div class="candidate-list" id="asg-candidate-list"></div>
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+              <button class="btn-sm btn-primary" onclick="addSelectedAssignees()">＋ 加入所選人員</button>
+              <button class="btn-sm btn-secondary" onclick="openAddAssigneeModal()">＋ 新增單一人員（不在員工總表中）</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <div class="table-head">
+              <h3>已指定人員 <span id="asg-count" style="font-size:.8rem;font-weight:400;color:var(--ink3)"></span></h3>
+              <div class="table-actions">
+                <select class="filter-select" id="asg-status-filter" onchange="renderAssigneeTable()">
+                  <option value="">全部狀態</option>
+                  <option value="done">已完成</option>
+                  <option value="pending">未完成</option>
+                </select>
+              </div>
+            </div>
+            <div id="asg-table-wrap"><div class="table-empty">尚無指定人員</div></div>
+          </div>
+        </div>
+
+        <!-- 通知設定 -->
+        <div class="subtab-pane" id="sub-notify">
+          <div class="notif-card">
+            <h3>立即發送通知</h3>
+            <p style="font-size:.85rem;color:var(--ink2);margin-bottom:1rem">對本課程<strong>所有指定人員</strong>發送教育訓練通知信。</p>
+            <div style="font-size:.8rem;color:var(--ink3);background:var(--paper2);padding:.75rem 1rem;border-radius:var(--radius);margin-bottom:1rem;word-break:break-all">
+              訓練連結：<a href="https://dawningtechhr.github.io/video/video-training.html" target="_blank" style="color:var(--accent)">https://dawningtechhr.github.io/video/video-training.html</a>
+            </div>
+            <button class="btn-sm btn-primary" onclick="sendInitialNotificationClick()">📧 立即發送通知</button>
+            <span id="notif-send-result" style="margin-left:.75rem;font-size:.82rem"></span>
+          </div>
+
+          <div class="notif-card">
+            <h3>定期提醒排程</h3>
+            <p style="font-size:.85rem;color:var(--ink2);margin-bottom:1rem">自動對<strong>尚未完成</strong>本課程的人員發送提醒信。</p>
+            <div class="notif-row">
+              <label>啟用定期提醒</label>
+              <div class="toggle-wrap">
+                <label class="toggle"><input type="checkbox" id="notif-enabled"><span class="toggle-slider"></span></label>
+                <span id="notif-status-text" style="font-size:.82rem;color:var(--ink3)"><span class="status-dot off"></span>未啟用</span>
+              </div>
+            </div>
+            <div class="notif-row" style="align-items:flex-start">
+              <label style="padding-top:.5rem">啟動時機</label>
+              <div style="flex:1">
+                <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.65rem;font-size:.85rem;color:var(--ink2);cursor:pointer">
+                  <input type="radio" name="notif-start-mode" id="notif-mode-fixed" value="fixedDate" style="width:auto;flex-shrink:0" onchange="updateNotifStartModeUI()">
+                  <span style="white-space:nowrap">起始通知日期</span>
+                  <input type="date" id="notif-start-date" style="width:180px;flex-shrink:0">
+                </label>
+                <label style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--ink2);cursor:pointer">
+                  <input type="radio" name="notif-start-mode" id="notif-mode-deadline" value="beforeDeadline" style="width:auto;flex-shrink:0" onchange="updateNotifStartModeUI()">
+                  <span style="white-space:nowrap">於完成期限前</span>
+                  <input type="number" id="notif-days-before" min="1" max="365" value="7" style="width:70px;flex-shrink:0">
+                  <span style="white-space:nowrap">天啟動通知</span>
+                </label>
+                <div class="form-hint" style="margin-top:.4rem">兩者擇一：「起始通知日期」為全課程統一的起算日；「完成期限前 X 天」則依每位人員各自的完成期限起算，未設定完成期限者此模式下不會收到提醒。</div>
+              </div>
+            </div>
+            <div class="notif-row">
+              <label>提醒頻率（天）</label>
+              <input type="number" id="notif-frequency" min="1" max="365" value="7" style="max-width:100px">
+              <span style="font-size:.82rem;color:var(--ink3);white-space:nowrap">天發送一次</span>
+            </div>
+            <div id="notif-last-sent" style="font-size:.78rem;color:var(--ink3);margin-bottom:.75rem"></div>
+            <button class="btn-sm btn-primary" onclick="saveReminderSettingsClick()">💾 儲存排程設定</button>
+            <span id="notif-save-result" style="margin-left:.75rem;font-size:.82rem"></span>
+          </div>
+        </div>
+
+        <!-- 觀看／測驗紀錄 -->
+        <div class="subtab-pane" id="sub-records">
+          <div class="stat-grid" id="rec-stat-grid">
+            <div class="stat-card"><div class="sc-val ink" id="rst-total">—</div><div class="sc-lbl">應完成人數</div></div>
+            <div class="stat-card"><div class="sc-val green" id="rst-passed">—</div><div class="sc-lbl">已完成人數</div></div>
+            <div class="stat-card"><div class="sc-val red" id="rst-failed">—</div><div class="sc-lbl">未完成人數</div></div>
+            <div class="stat-card"><div class="sc-val blue" id="rst-rate">—</div><div class="sc-lbl">完成率</div></div>
+          </div>
+          <div class="table-wrap">
+            <div class="table-head"><h3>紀錄列表</h3><button class="btn-sm btn-secondary" onclick="loadCourseRecords()">🔄 重新整理</button></div>
+            <div id="cr-table-wrap"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- EMPLOYEES -->
+    <div class="tab-content" id="tab-employees">
+      <div class="page-title">員工總表</div>
+      <div class="page-sub">全公司員工基本資料，作為各課程「依部門／職類指定人員」的來源</div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3>員工列表 <span id="emp-count" style="font-size:.8rem;font-weight:400;color:var(--ink3)"></span></h3>
+          <div class="table-actions">
+            <div class="search-box"><span class="si">🔍</span><input type="text" id="emp-search" placeholder="搜尋姓名、工號、部門…" oninput="filterEmployeeTable()"></div>
+            <select class="filter-select" id="emp-dept-filter" onchange="filterEmployeeTable()"><option value="">所有部門</option></select>
+            <select class="filter-select" id="emp-job-filter" onchange="filterEmployeeTable()"><option value="">所有職類</option></select>
+            <button class="btn-sm btn-secondary" onclick="loadEmployeeMaster()">🔄 重新整理</button>
+            <button class="btn-sm btn-secondary" onclick="openEmpUploadModal()">⬆ 批次上傳</button>
+            <button class="btn-sm btn-primary" onclick="openAddEmployeeModal()">＋ 新增員工</button>
+          </div>
+        </div>
+        <div id="emp-table-wrap"><div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div></div>
+      </div>
+    </div>
+
+    <!-- 檔案下載 -->
+    <div class="tab-content" id="tab-export">
+      <div class="page-title">檔案下載</div>
+      <div class="page-sub">依條件篩選課程指定人員名單，匯出 Excel 檔案</div>
+      <div class="notif-card">
+        <h3>篩選條件</h3>
+        <div class="filter-row">
+          <div class="form-group">
+            <label>課程起始日期（起）</label>
+            <input type="date" id="exp-start-from" onchange="updateExportCoursePreview()">
+          </div>
+          <div class="form-group">
+            <label>課程起始日期（迄）</label>
+            <input type="date" id="exp-start-to" onchange="updateExportCoursePreview()">
+          </div>
+          <div class="form-group">
+            <label>課程類型</label>
+            <select class="filter-select" id="exp-course-type" style="width:160px" onchange="updateExportCoursePreview()"><option value="">所有類型</option></select>
+          </div>
+          <div class="form-group">
+            <label>狀態</label>
+            <select class="filter-select" id="exp-status" style="width:120px" onchange="updateExportCoursePreview()">
+              <option value="">所有狀態</option>
+              <option value="active">進行中</option>
+              <option value="inactive">關閉</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>部門</label>
+            <select class="filter-select" id="exp-dept" style="width:140px"><option value="">所有部門</option></select>
+          </div>
+          <div class="form-group">
+            <label>職類</label>
+            <select class="filter-select" id="exp-jobtype" style="width:140px"><option value="">所有職類</option></select>
+          </div>
+        </div>
+        <button class="btn-sm btn-primary" onclick="exportCourseAssigneesExcel()">📥 匯出 Excel</button>
+        <span id="exp-status-msg" style="margin-left:.6rem;font-size:.82rem"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3>符合篩選條件的課程 <span id="exp-course-count" style="font-size:.8rem;font-weight:400;color:var(--ink3)"></span></h3>
+        </div>
+        <div id="exp-course-preview-wrap"><div class="table-empty">載入中…</div></div>
+      </div>
+    </div>
+
+    <!-- 同步員工資料設定 -->
+    <div class="tab-content" id="tab-empsync">
+      <div class="page-title">同步員工資料設定</div>
+      <div class="page-sub">設定固定檔名與欄位對應，從雲端硬碟同步員工總表資料，可手動執行或設定每日自動同步</div>
+      <div class="notif-card">
+        <h3>1. 設定來源檔案與欄位對應</h3>
+        <div class="vid-row">
+          <label>固定檔名</label>
+          <div class="vid-input-wrap">
+            <input type="text" id="emp-sync-filename" placeholder="例如：HR員工名冊">
+            <div class="vid-hint">系統每次同步都會在雲端硬碟中尋找此檔名、且最近更新的 Google 試算表檔案，適合每天用同一個檔名覆蓋/另存的情境。</div>
+          </div>
+        </div>
+        <div class="vid-row">
+          <label>標題列（第幾列）</label>
+          <div class="vid-input-wrap">
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <input type="number" id="emp-sync-header-row" min="1" value="1" style="width:90px">
+              <button class="btn-sm btn-secondary" onclick="loadSyncFieldHeaders()">讀取欄位</button>
+            </div>
+            <div class="vid-hint">若來源檔案前面有幾列說明或空白，欄位標題不是在第 1 列，請填實際所在的列數（例如第 9 列）。</div>
+          </div>
+        </div>
+        <div id="emp-sync-headers-msg" style="font-size:.82rem;margin:.3rem 0 .6rem"></div>
+        <div id="emp-sync-mapping-area" style="display:none">
+          <div class="vid-row"><label>工號 <span style="color:var(--red)">*</span></label><div class="vid-input-wrap"><select id="emp-sync-map-empId"></select></div></div>
+          <div class="vid-row"><label>在職狀態 <span style="color:var(--red)">*</span></label><div class="vid-input-wrap"><select id="emp-sync-map-status"></select><div class="vid-hint">來源欄位內容須為「在職」或「離職」文字，用於判斷新增／刪除。</div></div></div>
+          <div class="vid-row"><label>姓名</label><div class="vid-input-wrap"><select id="emp-sync-map-name"></select></div></div>
+          <div class="vid-row"><label>部門</label><div class="vid-input-wrap"><select id="emp-sync-map-dept"></select></div></div>
+          <div class="vid-row"><label>職類</label><div class="vid-input-wrap"><select id="emp-sync-map-jobType"></select></div></div>
+          <div class="vid-row"><label>Email</label><div class="vid-input-wrap"><select id="emp-sync-map-email"></select></div></div>
+          <button class="btn-sm btn-primary" onclick="saveSyncMapping()">💾 儲存對應設定</button>
+          <span id="emp-sync-map-savemsg" style="margin-left:.6rem;font-size:.82rem"></span>
+        </div>
+      </div>
+      <div class="notif-card">
+        <h3>2. 每日自動同步</h3>
+        <div class="notif-row">
+          <label>是否啟用每日自動同步</label>
+          <div class="toggle-wrap">
+            <label class="toggle"><input type="checkbox" id="emp-sync-auto-toggle" onchange="updateEmpSyncAutoStatus()"><span class="toggle-slider"></span></label>
+            <span id="emp-sync-auto-text" style="font-size:.82rem;color:var(--ink3)"><span class="status-dot off"></span>關閉</span>
+          </div>
+        </div>
+        <div class="vid-row">
+          <label>每日同步時間</label>
+          <div class="vid-input-wrap">
+            <select id="emp-sync-auto-hour" style="width:120px">
+              <option value="0">00:00</option><option value="1">01:00</option><option value="2">02:00</option><option value="3">03:00</option>
+              <option value="4">04:00</option><option value="5">05:00</option><option value="6">06:00</option><option value="7">07:00</option>
+              <option value="8">08:00</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
+              <option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option>
+              <option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option><option value="19">19:00</option>
+              <option value="20">20:00</option><option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+            </select>
+            <div class="vid-hint">Apps Script 觸發器僅保證在此時段內的某個時間點執行，非精確整點。</div>
+          </div>
+        </div>
+        <button class="btn-sm btn-primary" onclick="saveSyncMapping()">💾 儲存設定</button>
+        <span id="emp-sync-auto-savemsg" style="margin-left:.6rem;font-size:.82rem"></span>
+      </div>
+      <div class="notif-card">
+        <h3>3. 執行同步</h3>
+        <p style="font-size:.82rem;color:var(--ink2);margin-bottom:.6rem">以來源檔案「工號」為主要依據：<strong>來源為在職且員工總表尚無資料 → 新增</strong>（密碼預設為來源「工號」）；<strong>來源為離職、或員工總表有資料但來源已無此工號 → 從員工總表刪除</strong>；其餘已存在者比對已對應的欄位是否異動，<strong>有異動才更新</strong>，<strong style="color:var(--red)">密碼不會被覆蓋</strong>。此操作會實際刪除／新增員工總表資料，請確認來源檔案正確後再執行。</p>
+        <button class="btn-sm btn-primary" id="emp-sync-confirm-btn" onclick="confirmEmpSync()">🔄 立即同步</button>
+        <div id="emp-sync-result" style="font-size:.82rem;margin-top:.5rem"></div>
+      </div>
+    </div>
+
+    <!-- ADMINS -->
+    <div class="tab-content" id="tab-admins">
+      <div class="page-title">管理員設定</div>
+      <div class="page-sub">管理系統管理員帳號</div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3>管理員列表</h3>
+          <button class="btn-sm btn-primary" onclick="openAdminModal()">＋ 新增管理員</button>
+        </div>
+        <div class="admin-list" id="admin-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ MODALS ═══════ -->
+
+<!-- ADMIN MODAL -->
+<div class="modal-overlay" id="modal-admin">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="admin-modal-title">新增管理員</h3>
+      <button class="btn-close" onclick="closeAdminModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-form">
+        <input type="hidden" id="adm-id">
+        <div class="form-group"><label>姓名 <span style="color:var(--red)">*</span></label><input type="text" id="adm-name" placeholder="請輸入姓名"></div>
+        <div class="form-group"><label>帳號 <span style="color:var(--red)">*</span></label><input type="text" id="adm-username" placeholder="請輸入登入帳號"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="adm-email" placeholder="選填"></div>
+        <div class="form-group">
+          <label>角色</label>
+          <select id="adm-role"><option value="超級管理員">超級管理員</option><option value="一般管理員">一般管理員</option></select>
+        </div>
+        <div class="form-group">
+          <label id="adm-pwd-label">密碼 <span style="color:var(--red)">*</span></label>
+          <input type="password" id="adm-pwd" placeholder="請輸入密碼">
+          <div class="form-hint" id="adm-pwd-hint"></div>
+        </div>
+        <div id="adm-err" style="color:var(--red);font-size:.8rem;margin-bottom:.5rem;display:none"></div>
+        <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn-sm btn-secondary" onclick="closeAdminModal()">取消</button>
+          <button class="btn-sm btn-primary" onclick="saveAdmin()">儲存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<datalist id="course-type-datalist"></datalist>
+
+<!-- COURSE CREATE MODAL -->
+<div class="modal-overlay" id="modal-course-create">
+  <div class="modal">
+    <div class="modal-head"><h3>新增課程</h3><button class="btn-close" onclick="closeCourseCreateModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-form">
+        <div class="form-group"><label>課程名稱 <span style="color:var(--red)">*</span></label><input type="text" id="cc-name" placeholder="例如：職場霸凌防治教育訓練"></div>
+        <div class="form-group"><label>課程類型</label><input type="text" id="cc-type" placeholder="例如：法定教育訓練、職能訓練（選填）" list="course-type-datalist"></div>
+        <div id="cc-err" style="color:var(--red);font-size:.8rem;margin-bottom:.5rem;display:none"></div>
+        <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn-sm btn-secondary" onclick="closeCourseCreateModal()">取消</button>
+          <button class="btn-sm btn-primary" onclick="saveCourseCreate()">建立並繼續設定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ASSIGNEE (MANUAL) MODAL -->
+<div class="modal-overlay" id="modal-add-assignee">
+  <div class="modal">
+    <div class="modal-head"><h3>新增單一指定人員</h3><button class="btn-close" onclick="closeAddAssigneeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-form">
+        <div class="form-group"><label>工號 <span style="color:var(--red)">*</span></label><input type="text" id="aa-empid" placeholder="請輸入工號"></div>
+        <div class="form-group"><label>姓名 <span style="color:var(--red)">*</span></label><input type="text" id="aa-name" placeholder="請輸入姓名"></div>
+        <div class="form-group"><label>部門</label><input type="text" id="aa-dept" placeholder="請輸入部門"></div>
+        <div class="form-group"><label>職類</label><input type="text" id="aa-job" placeholder="請輸入職類"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="aa-email" placeholder="選填，用於通知發送"></div>
+        <div id="aa-err" style="color:var(--red);font-size:.8rem;margin-bottom:.5rem;display:none"></div>
+        <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn-sm btn-secondary" onclick="closeAddAssigneeModal()">取消</button>
+          <button class="btn-sm btn-primary" onclick="saveAddAssignee()">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEE ADD MODAL -->
+<div class="modal-overlay" id="modal-emp-add">
+  <div class="modal">
+    <div class="modal-head"><h3>新增員工</h3><button class="btn-close" onclick="closeAddEmployeeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-form">
+        <div class="form-group"><label>工號 <span style="color:var(--red)">*</span></label><input type="text" id="emp-empid" placeholder="請輸入工號"></div>
+        <div class="form-group"><label>姓名 <span style="color:var(--red)">*</span></label><input type="text" id="emp-name" placeholder="請輸入姓名"></div>
+        <div class="form-group"><label>部門</label><input type="text" id="emp-dept" placeholder="請輸入部門"></div>
+        <div class="form-group"><label>職類</label><input type="text" id="emp-job" placeholder="請輸入職類"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="emp-email" placeholder="選填"></div>
+        <div class="form-group"><label>密碼</label><input type="text" id="emp-password" placeholder="選填，訓練頁登入密碼，預設請填工號"></div>
+        <div id="emp-add-err" style="color:var(--red);font-size:.8rem;margin-bottom:.5rem;display:none"></div>
+        <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn-sm btn-secondary" onclick="closeAddEmployeeModal()">取消</button>
+          <button class="btn-sm btn-primary" onclick="saveAddEmployee()">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEE UPLOAD MODAL -->
+<div class="modal-overlay" id="modal-emp-upload">
+  <div class="modal">
+    <div class="modal-head"><h3>批次上傳員工總表</h3><button class="btn-close" onclick="closeEmpUploadModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;color:var(--ink2);margin-bottom:.75rem">上傳 CSV 檔案或貼上資料（格式：工號,姓名,部門,職類,email,密碼，第一列為標題）。密碼為選填，為員工登入訓練頁用的密碼，預設請填工號。<br>上傳後將<strong>取代</strong>現有員工總表。</p>
+      <div style="background:var(--paper2);border-radius:var(--radius);padding:.6rem .9rem;font-family:monospace;font-size:.78rem;color:var(--ink2);margin-bottom:.9rem">
+        工號,姓名,部門,職類,email,密碼<br>A001,王小明,人資部,專員,wang@example.com,A123456789<br>A002,李小華,業務部,經理,lee@example.com,B123456789
+      </div>
+      <div class="upload-zone" id="emp-upload-zone" onclick="document.getElementById('emp-csv-file').click()">
+        <input type="file" id="emp-csv-file" accept=".csv,text/csv" onchange="handleEmpFileSelect(event)">
+        <div style="font-size:2rem">📁</div>
+        <p>點擊選擇 CSV 檔案，或將檔案拖曳至此</p>
+        <p id="emp-file-name" style="color:var(--accent);font-weight:500;margin-top:.35rem"></p>
+      </div>
+      <div style="text-align:center;margin:.75rem 0;color:var(--ink3);font-size:.8rem">— 或 —</div>
+      <textarea id="emp-csv-paste" placeholder="貼上 CSV 內容…" style="width:100%;height:120px;font-family:monospace;font-size:.78rem;padding:.75rem;resize:vertical"></textarea>
+      <div id="emp-upload-preview" style="margin-top:.75rem;font-size:.82rem;color:var(--ink2)"></div>
+      <div id="emp-upload-err" style="color:var(--red);font-size:.8rem;margin-top:.5rem;display:none"></div>
+      <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
+        <button class="btn-sm btn-secondary" onclick="closeEmpUploadModal()">取消</button>
+        <button class="btn-sm btn-primary" id="emp-upload-confirm-btn" onclick="confirmEmpUpload()">確認上傳</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEE COURSE MANAGEMENT MODAL -->
+<div class="modal-overlay" id="modal-emp-courses">
+  <div class="modal">
+    <div class="modal-head"><h3 id="emp-courses-modal-title">課程管理</h3><button class="btn-close" onclick="closeEmployeeCourseModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;color:var(--ink2);margin-bottom:.75rem">勾選此員工必須完成的課程：</p>
+      <div class="filter-row">
+        <div class="form-group"><label>課程起始日期</label><input type="date" id="ec-start-date-filter" onchange="renderEmpCoursesList()"></div>
+        <div class="form-group"><label>課程類型</label><select id="ec-type-filter" onchange="renderEmpCoursesList()"><option value="">全部類型</option></select></div>
+        <div class="form-group" style="margin-left:auto;margin-right:.95rem;text-align:right"><label>批次設定課程完成期限</label><input type="date" id="ec-default-deadline" style="width:150px" title="套用到所有勾選課程的預設完成期限，個別課程可再自訂覆蓋"></div>
+      </div>
+      <div style="margin-bottom:.6rem"><label style="font-size:.82rem;color:var(--ink2)"><input type="checkbox" id="ec-select-all" style="width:auto;margin-right:.4rem" onchange="toggleSelectAllEmpCourses(this)">全選目前篩選結果</label></div>
+      <div class="candidate-list" id="emp-courses-list" style="max-height:340px"></div>
+      <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
+        <button class="btn-sm btn-secondary" onclick="closeEmployeeCourseModal()">取消</button>
+        <button class="btn-sm btn-primary" id="emp-courses-save-btn" onclick="saveEmployeeCourses()">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-head"><h3>紀錄詳情</h3><button class="btn-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════ CONFIG ═══════════
+const CFG_KEY = 'safety_admin_url';
+let GS_URL = localStorage.getItem(CFG_KEY) || 'https://script.google.com/macros/s/AKfycbyKCEB0e9KwSyBWQ9gn3VUCyt6D4ePq0nPTOnSLHsXTc1I3GtyPlRtuRoN-X583bu5vAQ/exec';
+
+function formatTimestamp(ts){
+  if(!ts) return '—';
+  const d = new Date(ts);
+  if(isNaN(d.getTime())) return String(ts);
+  try{
+    const p = {};
+    new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d).forEach(({type,value})=>{ p[type]=value; });
+    return `${p.year}/${p.month}/${p.day} ${p.hour}:${p.minute}`;
+  }catch(e){ return String(ts); }
+}
+function formatWatchTime(seconds){
+  const s = Number(seconds) || 0;
+  const m = Math.floor(s/60), r = s%60;
+  return `${m}分${r}秒`;
+}
+
+// ═══════════ LOGIN ═══════════
+function doLogin(){
+  const user = document.getElementById('login-user').value.trim();
+  const pwd  = document.getElementById('login-pwd').value;
+  const err  = document.getElementById('login-err');
+  err.style.display = 'none';
+  if(!user || !pwd){ err.textContent='請填寫帳號及密碼'; err.style.display='block'; return; }
+  err.textContent='驗證中…'; err.style.display='block';
+  fetch(`${GS_URL}?action=auth&user=${encodeURIComponent(user)}&pwd=${encodeURIComponent(pwd)}`)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.ok){ enterAdmin(d.name || user); }
+      else{ err.textContent='帳號或密碼錯誤，請重試'; }
+    })
+    .catch(()=>{ err.textContent='連線失敗，請確認網路或 Apps Script URL 設定'; });
+}
+
+function enterAdmin(user){
+  document.getElementById('login-err').style.display='none';
+  document.getElementById('sb-name').textContent = user;
+  document.getElementById('sb-avatar').textContent = user.charAt(0).toUpperCase();
+  show('s-admin');
+  loadDashboard();
+}
+
+function doLogout(){ show('s-login'); document.getElementById('login-pwd').value=''; }
+
+// ═══════════ NAVIGATION ═══════════
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sb-nav .nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.sb-nav .nav-item').forEach(n=>{ if(n.textContent.includes(tabLabel(name))) n.classList.add('active'); });
+  if(name === 'dashboard') loadDashboard();
+  if(name === 'courses' && !currentCourseId) loadCourseList();
+}
+function tabLabel(n){ return {dashboard:'儀表板',courses:'課程管理',employees:'員工總表',export:'檔案下載',empsync:'同步員工資料設定',admins:'管理員設定'}[n]||n; }
+
+// ═══════════ DASHBOARD ═══════════
+let dashCourses = [];
+let dashSortState = { col:'startDate', asc:false };
+
+function loadDashboard(){
+  document.getElementById('dash-updated').textContent = '載入中…';
+  fetch(`${GS_URL}?action=getCourses`)
+    .then(r=>r.json())
+    .then(d=>{
+      const courses = d.courses || [];
+      let total=0, completed=0;
+      courses.forEach(c=>{ total += c.total; completed += c.completed; });
+      document.getElementById('st-active-courses').textContent = courses.filter(c=>c.active!==false).length;
+      document.getElementById('st-total').textContent  = total;
+      document.getElementById('st-passed').textContent = completed;
+      document.getElementById('st-failed').textContent = total - completed;
+      document.getElementById('st-rate').textContent   = total ? Math.round(completed/total*100)+'%' : '0%';
+      document.getElementById('dash-updated').textContent = '資料更新時間：' + new Date().toLocaleString('zh-TW');
+
+      dashCourses = courses;
+      renderDashboardCourseTable();
+    })
+    .catch(()=>{ document.getElementById('dash-updated').textContent = '⚠️ 無法連線至 Google 試算表'; });
+}
+
+function sortDashCourseTable(col){ toggleSort(dashSortState, col); renderDashboardCourseTable(); }
+
+function renderDashboardCourseTable(){
+  const wrap = document.getElementById('dash-course-table');
+  if(!dashCourses.length){ wrap.innerHTML = '<div class="table-empty">尚無課程，請至「課程管理」新增</div>'; return; }
+
+  let list = dashCourses.filter(c=>c.active!==false);
+  if(!list.length){ wrap.innerHTML = '<div class="table-empty">目前無進行中的課程</div>'; return; }
+
+  if(dashSortState.col){
+    const getter = COURSE_COL_GETTERS[dashSortState.col];
+    const numeric = COURSE_COL_NUMERIC.has(dashSortState.col);
+    const dir = dashSortState.asc ? 1 : -1;
+    list.sort((a,b)=>compareVals(getter(a), getter(b), numeric) * dir);
+  }
+
+  wrap.innerHTML = `<table><thead><tr>
+    ${sortableTh('課程名稱','name',dashSortState)}${sortableTh('課程類型','courseType',dashSortState)}${sortableTh('起始日期','startDate',dashSortState)}${sortableTh('觀看影片','videoRequired',dashSortState)}${sortableTh('是否測驗','hasQuiz',dashSortState)}${sortableTh('指定人數','total',dashSortState)}${sortableTh('已完成','completed',dashSortState)}${sortableTh('完成率','rate',dashSortState)}
+  </tr></thead><tbody>
+    ${list.map(c=>`<tr class="clickable" data-course-id="${c.id}"><td><strong>${escapeHtml(c.name)}</strong></td><td>${escapeHtml(c.courseType||'—')}</td><td>${escapeHtml(c.startDate||'—')}</td><td>${c.videoRequired!==false?'<span class="badge pass">需要</span>':'<span class="badge neutral">不需要</span>'}</td><td>${c.hasQuiz?'<span class="badge pass">需測驗</span>':'<span class="badge neutral">無測驗</span>'}</td>
+    <td>${c.total}</td><td>${c.completed}</td><td>${c.total?Math.round(c.completed/c.total*100):0}%</td></tr>`).join('')}
+    </tbody></table>`;
+  wrap.querySelectorAll('tr[data-course-id]').forEach(tr=>{
+    tr.addEventListener('click', ()=>{ showTab('courses'); openCourseDetail(tr.dataset.courseId); });
+  });
+  wrap.querySelectorAll('th[data-sort-col]').forEach(th=>th.addEventListener('click', ()=>sortDashCourseTable(th.dataset.sortCol)));
+}
+
+// ═══════════ 共用排序工具 ═══════════
+function sortIndicator(state, col){
+  if(state.col !== col) return '<span style="color:var(--paper3);font-size:.7rem;margin-left:3px">⇅</span>';
+  return `<span style="font-size:.7rem;margin-left:3px">${state.asc?'▲':'▼'}</span>`;
+}
+function toggleSort(state, col){
+  if(state.col === col) state.asc = !state.asc;
+  else { state.col = col; state.asc = true; }
+}
+function compareVals(a, b, numeric){
+  if(numeric) return (Number(a)||0) - (Number(b)||0);
+  return String(a??'').localeCompare(String(b??''), 'zh-TW', {numeric:true, sensitivity:'base'});
+}
+function sortableTh(label, col, state){
+  return `<th style="cursor:pointer;user-select:none;white-space:nowrap" data-sort-col="${col}">${label}${sortIndicator(state, col)}</th>`;
+}
+
+// ═══════════ COURSES：列表 ═══════════
+let allCourses = [];
+let currentCourseId = null;
+let currentCourse = null;
+let courseSortState = { col:'startDate', asc:false };
+
+function loadCourseList(){
+  const wrap = document.getElementById('course-table-wrap');
+  wrap.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div>';
+  fetch(`${GS_URL}?action=getCourses`)
+    .then(r=>r.json())
+    .then(d=>{ allCourses = d.courses || []; populateCourseTypeFilter(); renderCourseStats(); renderCourseTable(); })
+    .catch(()=>{ wrap.innerHTML = '<div class="table-empty">❌ 無法連線至 Google 試算表，請確認 Apps Script URL 設定</div>'; });
+}
+
+function renderCourseStats(){
+  const activeCount = allCourses.filter(c=>c.active!==false).length;
+  document.getElementById('cst-total').textContent = allCourses.length;
+  document.getElementById('cst-active').textContent = activeCount;
+  document.getElementById('cst-inactive').textContent = allCourses.length - activeCount;
+}
+
+function populateCourseTypeFilter(){
+  const types = Array.from(new Set(allCourses.map(c=>c.courseType).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-TW'));
+  const sel = document.getElementById('course-type-filter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">所有類型</option>' + types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  if(types.includes(cur)) sel.value = cur;
+  const datalist = document.getElementById('course-type-datalist');
+  if(datalist) datalist.innerHTML = types.map(t=>`<option value="${escapeHtml(t)}">`).join('');
+}
+
+const COURSE_COL_GETTERS = {
+  name: c=>c.name||'', courseType: c=>c.courseType||'',
+  startDate: c=>c.startDate||'', active: c=>c.active!==false?1:0, videoRequired: c=>c.videoRequired!==false?1:0,
+  hasQuiz: c=>c.hasQuiz?1:0, passScore: c=>c.hasQuiz?c.passScore:-1,
+  total: c=>c.total, completed: c=>c.completed,
+  rate: c=>c.total?c.completed/c.total:-1
+};
+const COURSE_COL_NUMERIC = new Set(['hasQuiz','passScore','total','completed','rate','videoRequired','active']);
+
+function sortCourseTable(col){ toggleSort(courseSortState, col); renderCourseTable(); }
+
+function renderCourseTable(){
+  const wrap = document.getElementById('course-table-wrap');
+  const typeFilter = document.getElementById('course-type-filter').value;
+  const statusFilter = document.getElementById('course-status-filter').value;
+  let list = allCourses.slice();
+  if(typeFilter) list = list.filter(c=>c.courseType===typeFilter);
+  if(statusFilter === 'active') list = list.filter(c=>c.active!==false);
+  else if(statusFilter === 'inactive') list = list.filter(c=>c.active===false);
+
+  if(courseSortState.col){
+    const getter = COURSE_COL_GETTERS[courseSortState.col];
+    const numeric = COURSE_COL_NUMERIC.has(courseSortState.col);
+    const dir = courseSortState.asc ? 1 : -1;
+    list.sort((a,b)=>compareVals(getter(a), getter(b), numeric) * dir);
+  }
+
+  if(!allCourses.length){ wrap.innerHTML = '<div class="table-empty">尚無課程，請點擊「＋ 新增課程」建立</div>'; return; }
+  if(!list.length){ wrap.innerHTML = '<div class="table-empty">無符合條件的課程</div>'; return; }
+
+  wrap.innerHTML = `<table><thead><tr>
+    ${sortableTh('課程名稱','name',courseSortState)}${sortableTh('課程類型','courseType',courseSortState)}${sortableTh('起始日期','startDate',courseSortState)}${sortableTh('狀態','active',courseSortState)}${sortableTh('觀看影片','videoRequired',courseSortState)}${sortableTh('是否測驗','hasQuiz',courseSortState)}${sortableTh('及格分數','passScore',courseSortState)}${sortableTh('指定人數','total',courseSortState)}${sortableTh('已完成','completed',courseSortState)}${sortableTh('完成率','rate',courseSortState)}<th></th>
+  </tr></thead><tbody>${list.map(c=>`<tr>
+    <td class="clickable" data-open-id="${c.id}"><strong>${escapeHtml(c.name)}</strong></td>
+    <td>${escapeHtml(c.courseType||'—')}</td>
+    <td>${escapeHtml(c.startDate||'—')}</td>
+    <td>${c.active!==false?'<span class="badge pass">進行中</span>':'<span class="badge neutral">關閉</span>'}</td>
+    <td>${c.videoRequired!==false?'<span class="badge pass">需要</span>':'<span class="badge neutral">不需要</span>'}</td>
+    <td>${c.hasQuiz?'<span class="badge pass">需測驗</span>':'<span class="badge neutral">無測驗</span>'}</td>
+    <td>${c.hasQuiz ? c.passScore+'%' : '—'}</td>
+    <td>${c.total}</td><td>${c.completed}</td><td>${c.total?Math.round(c.completed/c.total*100):0}%</td>
+    <td style="white-space:nowrap">
+      <button class="btn-sm btn-secondary" data-open-id="${c.id}">編輯</button>
+    </td>
+  </tr>`).join('')}</tbody></table>`;
+  wrap.querySelectorAll('[data-open-id]').forEach(el=>el.addEventListener('click', ()=>openCourseDetail(el.dataset.openId)));
+  wrap.querySelectorAll('th[data-sort-col]').forEach(th=>th.addEventListener('click', ()=>sortCourseTable(th.dataset.sortCol)));
+}
+
+function deleteCourseFromList(id, name){
+  if(!confirm(`確定要刪除課程「${name}」？此操作將一併刪除該課程的測驗題目、指定人員與觀看／測驗紀錄，無法復原。`)) return;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'deleteCourse', id }) })
+    .then(r=>r.json())
+    .then(d=>{ if(d.status==='error'){ alert(d.message||'刪除失敗'); return; } loadCourseList(); })
+    .catch(()=>alert('連線失敗，請稍後再試'));
+}
+
+function openCourseCreateModal(){
+  document.getElementById('cc-name').value = '';
+  document.getElementById('cc-type').value = '';
+  document.getElementById('cc-err').style.display = 'none';
+  document.getElementById('modal-course-create').classList.add('open');
+}
+function closeCourseCreateModal(){ document.getElementById('modal-course-create').classList.remove('open'); }
+document.getElementById('modal-course-create').addEventListener('click', function(e){ if(e.target===this) closeCourseCreateModal(); });
+
+function saveCourseCreate(){
+  const name = document.getElementById('cc-name').value.trim();
+  const courseType = document.getElementById('cc-type').value.trim();
+  const errEl = document.getElementById('cc-err');
+  if(!name){ errEl.textContent='請輸入課程名稱'; errEl.style.display='block'; return; }
+  const id = Date.now().toString();
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'addCourse', id, name, courseType }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='error'){ errEl.textContent=d.message||'建立失敗'; errEl.style.display='block'; return; }
+      closeCourseCreateModal();
+      openCourseDetail(id);
+    })
+    .catch(()=>{ errEl.textContent='連線失敗，請稍後再試'; errEl.style.display='block'; });
+}
+
+// ═══════════ COURSES：詳細 ═══════════
+function openCourseDetail(courseId){
+  currentCourseId = String(courseId);
+  document.getElementById('course-list-view').style.display = 'none';
+  document.getElementById('course-detail-view').style.display = 'block';
+  document.getElementById('cd-title').textContent = '載入中…';
+  document.getElementById('cd-sub').textContent = '';
+  showCourseSubtab('basic');
+
+  fetch(`${GS_URL}?action=getCourse&courseId=${encodeURIComponent(currentCourseId)}`)
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.found){ alert('找不到課程'); backToCourseList(); return; }
+      currentCourse = d.course;
+      document.getElementById('cd-title').textContent = currentCourse.name;
+      document.getElementById('cd-sub').textContent = currentCourse.hasQuiz ? `含測驗・及格分數 ${currentCourse.passScore}%` : '不含測驗';
+
+      document.getElementById('basic-name-input').value = currentCourse.name;
+      document.getElementById('basic-type-input').value = currentCourse.courseType || '';
+      const hoursMatch = /(\d+)時(\d+)分/.exec(currentCourse.courseHours || '');
+      document.getElementById('basic-hours-h').value = hoursMatch ? hoursMatch[1] : '';
+      document.getElementById('basic-hours-m').value = hoursMatch ? hoursMatch[2] : '';
+      document.getElementById('basic-start-date').value = currentCourse.startDate || '';
+      document.getElementById('basic-remarks').value = currentCourse.remarks || '';
+      document.getElementById('basic-save-status').textContent = '';
+      document.getElementById('course-active-toggle').checked = currentCourse.active !== false;
+      updateCourseActiveStatus();
+
+      document.getElementById('video-required-toggle').checked = currentCourse.videoRequired !== false;
+      updateVideoRequiredStatus();
+
+      if(currentCourse.videoId){
+        document.getElementById('vid-link-input').value = 'https://www.youtube.com/watch?v=' + currentCourse.videoId;
+        document.getElementById('vid-id-display').value = currentCourse.videoId;
+        showVideoPreview(currentCourse.videoId);
+      } else {
+        document.getElementById('vid-link-input').value = '';
+        document.getElementById('vid-id-display').value = '';
+        hideVideoPreview();
+      }
+      document.getElementById('vid-save-status').textContent = '';
+
+      document.getElementById('quiz-enabled').checked = currentCourse.hasQuiz;
+      document.getElementById('quiz-pass-score').value = currentCourse.passScore;
+      updateQuizToggleStatus();
+      document.getElementById('quiz-save-status').textContent = '';
+
+      currentQuestions = d.questions || [];
+      renderQuizEditor();
+
+      loadCourseAssignees();
+      loadCourseRecords();
+      loadCourseReminderSettings();
+    })
+    .catch(()=>{ alert('連線失敗，請確認 Apps Script URL 設定'); backToCourseList(); });
+}
+
+function backToCourseList(){
+  currentCourseId = null; currentCourse = null;
+  document.getElementById('course-detail-view').style.display = 'none';
+  document.getElementById('course-list-view').style.display = 'block';
+  loadCourseList();
+}
+
+function deleteCurrentCourse(){
+  if(!currentCourse) return;
+  deleteCourseFromList(currentCourse.id, currentCourse.name);
+  backToCourseList();
+}
+
+function showCourseSubtab(name){
+  document.querySelectorAll('#course-detail-view .subtab-item').forEach(el=>el.classList.toggle('active', el.dataset.subtab===name));
+  document.querySelectorAll('#course-detail-view .subtab-pane').forEach(el=>el.classList.remove('active'));
+  document.getElementById('sub-'+name).classList.add('active');
+}
+
+// ── 影片設定 ──
+function extractYouTubeId(url){
+  const patterns = [/[?&]v=([a-zA-Z0-9_-]{11})/, /youtu\.be\/([a-zA-Z0-9_-]{11})/, /embed\/([a-zA-Z0-9_-]{11})/, /^([a-zA-Z0-9_-]{11})$/];
+  for(const p of patterns){ const m = url.match(p); if(m) return m[1]; }
+  return '';
+}
+document.getElementById('vid-link-input').addEventListener('input', function(){
+  document.getElementById('vid-id-display').value = extractYouTubeId(this.value.trim()) || '';
+});
+function previewVideo(){
+  const id = document.getElementById('vid-id-display').value.trim();
+  if(!id){ alert('請先貼上 YouTube 影片連結'); return; }
+  showVideoPreview(id);
+}
+function showVideoPreview(videoId){
+  const iframe = document.getElementById('vid-preview-iframe');
+  const ph = document.getElementById('vid-placeholder');
+  iframe.src = 'https://www.youtube.com/embed/' + videoId;
+  iframe.style.display = 'block'; ph.style.display = 'none';
+}
+function hideVideoPreview(){
+  const iframe = document.getElementById('vid-preview-iframe');
+  const ph = document.getElementById('vid-placeholder');
+  iframe.style.display = 'none'; iframe.src=''; ph.style.display = 'flex';
+}
+function updateVideoRequiredStatus(){
+  const on = document.getElementById('video-required-toggle').checked;
+  document.getElementById('video-required-text').innerHTML = on ? '<span class="status-dot on"></span>需要' : '<span class="status-dot off"></span>不需要';
+}
+
+function updateCourseActiveStatus(){
+  const on = document.getElementById('course-active-toggle').checked;
+  document.getElementById('course-active-text').innerHTML = on ? '<span class="status-dot on"></span>進行中' : '<span class="status-dot off"></span>關閉';
+}
+
+function saveCourseVideo(){
+  const videoId = document.getElementById('vid-id-display').value.trim();
+  const videoRequired = document.getElementById('video-required-toggle').checked;
+  const status = document.getElementById('vid-save-status');
+  status.className = 'vid-status loading'; status.textContent = '⏳ 儲存中…';
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'saveCourseVideoSettings', courseId:currentCourseId, videoId, videoRequired }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok'){
+        status.className = 'vid-status ok'; status.textContent = '✅ 已儲存';
+        currentCourse.videoId = videoId; currentCourse.videoRequired = videoRequired;
+      } else { status.className = 'vid-status err'; status.textContent = '❌ ' + (d.message||'儲存失敗'); }
+    })
+    .catch(()=>{ status.className = 'vid-status err'; status.textContent = '❌ 連線失敗'; });
+}
+
+// ── 課程基本資訊 ──
+function saveCourseBasicInfoClick(){
+  const name = document.getElementById('basic-name-input').value.trim();
+  const courseType = document.getElementById('basic-type-input').value.trim();
+  const hoursH = document.getElementById('basic-hours-h').value;
+  const hoursM = document.getElementById('basic-hours-m').value;
+  const courseHours = (hoursH || hoursM) ? `${hoursH||0}時${hoursM||0}分` : '';
+  const startDate = document.getElementById('basic-start-date').value;
+  const remarks = document.getElementById('basic-remarks').value.trim();
+  const active = document.getElementById('course-active-toggle').checked;
+  const status = document.getElementById('basic-save-status');
+  if(!name){ status.style.color='var(--red)'; status.textContent='⚠️ 請先填寫課程名稱'; return; }
+  status.style.color='var(--ink3)'; status.textContent='儲存中…';
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'saveCourseBasicInfo', courseId:currentCourseId, name, courseType, courseHours, startDate, remarks, active }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok'){
+        status.style.color='var(--green)'; status.textContent='✅ 已儲存';
+        currentCourse.name = name; currentCourse.courseType = courseType; currentCourse.courseHours = courseHours; currentCourse.startDate = startDate; currentCourse.remarks = remarks; currentCourse.active = active;
+        document.getElementById('cd-title').textContent = name;
+      } else { status.style.color='var(--red)'; status.textContent = '❌ ' + (d.message||'儲存失敗'); }
+      setTimeout(()=>status.textContent='',4000);
+    })
+    .catch(()=>{ status.style.color='var(--red)'; status.textContent='❌ 連線失敗'; });
+}
+
+// ── 測驗設定 ──
+let currentQuestions = [];
+let qzRowSeq = 0;
+
+document.getElementById('quiz-enabled').addEventListener('change', updateQuizToggleStatus);
+function updateQuizToggleStatus(){
+  const on = document.getElementById('quiz-enabled').checked;
+  document.getElementById('quiz-enabled-text').innerHTML = on ? '<span class="status-dot on"></span>已啟用' : '<span class="status-dot off"></span>未啟用';
+}
+function saveCourseQuiz(){
+  const hasQuiz = document.getElementById('quiz-enabled').checked;
+  const passScore = Number(document.getElementById('quiz-pass-score').value) || 0;
+  const status = document.getElementById('quiz-save-status');
+  status.textContent = '儲存中…'; status.style.color = 'var(--ink3)';
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'saveCourseQuizSettings', courseId:currentCourseId, hasQuiz, passScore }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok'){ status.textContent='✅ 已儲存'; status.style.color='var(--green)'; currentCourse.hasQuiz=hasQuiz; currentCourse.passScore=passScore; document.getElementById('cd-sub').textContent = hasQuiz ? `含測驗・及格分數 ${passScore}%` : '不含測驗'; }
+      else { status.textContent='❌ '+(d.message||'儲存失敗'); status.style.color='var(--red)'; }
+      setTimeout(()=>status.textContent='',4000);
+    })
+    .catch(()=>{ status.textContent='❌ 連線失敗'; status.style.color='var(--red)'; });
+}
+
+function renderQuizEditor(){
+  const container = document.getElementById('qz-editor');
+  container.innerHTML = '';
+  qzRowSeq = 0;
+  currentQuestions.forEach(q=>appendQuestionRow(q));
+  if(!currentQuestions.length) appendQuestionRow({question:'',optA:'',optB:'',optC:'',optD:'',correct:'A'});
+  renumberQuestions();
+}
+function appendQuestionRow(q){
+  const rowId = 'qz'+(qzRowSeq++);
+  const el = document.createElement('div');
+  el.className = 'qz-row';
+  el.dataset.rowId = rowId;
+  el.innerHTML = `
+    <div class="qz-row-head"><span class="qz-num"></span><button class="btn-sm btn-secondary" onclick="removeQuestionRow('${rowId}')">刪除本題</button></div>
+    <div class="form-group"><label>題目</label><textarea class="qz-question" rows="2" placeholder="請輸入題目內容">${escapeHtml(q.question||'')}</textarea></div>
+    ${['A','B','C','D'].map(letter=>`
+    <div class="qz-opt-row">
+      <input type="radio" name="correct-${rowId}" value="${letter}" ${q.correct===letter?'checked':''}>
+      <span class="qz-opt-label">${letter}</span>
+      <input type="text" class="qz-opt-${letter.toLowerCase()}" placeholder="選項${letter}${letter==='C'||letter==='D'?'（選填）':''}" value="${escapeHtml(q['opt'+letter]||'')}">
+    </div>`).join('')}
+  `;
+  document.getElementById('qz-editor').appendChild(el);
+}
+function removeQuestionRow(rowId){
+  const el = document.querySelector(`#qz-editor .qz-row[data-row-id="${rowId}"]`);
+  if(el) el.remove();
+  renumberQuestions();
+}
+function addQuestionRow(){
+  appendQuestionRow({question:'',optA:'',optB:'',optC:'',optD:'',correct:'A'});
+  renumberQuestions();
+}
+function renumberQuestions(){
+  document.querySelectorAll('#qz-editor .qz-row').forEach((el,i)=>{ el.querySelector('.qz-num').textContent = '第 '+(i+1)+' 題'; });
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function collectQuestionsFromDOM(){
+  return Array.from(document.querySelectorAll('#qz-editor .qz-row')).map(row=>{
+    const checked = row.querySelector('input[type=radio]:checked');
+    return {
+      question: row.querySelector('.qz-question').value.trim(),
+      optA: row.querySelector('.qz-opt-a').value.trim(),
+      optB: row.querySelector('.qz-opt-b').value.trim(),
+      optC: row.querySelector('.qz-opt-c').value.trim(),
+      optD: row.querySelector('.qz-opt-d').value.trim(),
+      correct: checked ? checked.value : 'A'
+    };
+  });
+}
+function saveQuizQuestionsClick(){
+  const questions = collectQuestionsFromDOM();
+  const status = document.getElementById('qz-save-status');
+  for(const q of questions){
+    if(!q.question || !q.optA || !q.optB){ status.textContent='❌ 每題至少需填寫題目、選項A、選項B'; status.style.color='var(--red)'; return; }
+    const key = 'opt'+q.correct;
+    if(!q[key]){ status.textContent='❌ 正確答案對應的選項不可留空'; status.style.color='var(--red)'; return; }
+  }
+  status.textContent = '儲存中…'; status.style.color = 'var(--ink3)';
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'saveQuizQuestions', courseId:currentCourseId, questions }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok'){ status.textContent = `✅ 已儲存 ${d.count} 題`; status.style.color='var(--green)'; }
+      else { status.textContent = '❌ '+(d.message||'儲存失敗'); status.style.color='var(--red)'; }
+      setTimeout(()=>status.textContent='',4000);
+    })
+    .catch(()=>{ status.textContent='❌ 連線失敗'; status.style.color='var(--red)'; });
+}
+
+// ── 指定人員 ──
+let employeeMasterList = [];
+let courseAssignees = [];
+
+function loadEmployeeMasterForCourse(cb){
+  fetch(`${GS_URL}?action=getEmployeeMaster`).then(r=>r.json()).then(d=>{ employeeMasterList = d.employees || []; if(cb) cb(); }).catch(()=>{ employeeMasterList=[]; if(cb) cb(); });
+}
+function loadCourseAssignees(){
+  fetch(`${GS_URL}?action=getCourseAssignees&courseId=${encodeURIComponent(currentCourseId)}`)
+    .then(r=>r.json())
+    .then(d=>{ courseAssignees = d.assignees || []; renderAssigneeTable(); loadEmployeeMasterForCourse(()=>{ populateAssigneeFilters(); renderCandidateList(); }); });
+}
+function populateAssigneeFilters(){
+  const depts = Array.from(new Set(employeeMasterList.map(e=>e.dept).filter(Boolean))).sort();
+  const jobs  = Array.from(new Set(employeeMasterList.map(e=>e.jobType).filter(Boolean))).sort();
+  const deptSel = document.getElementById('asg-dept-filter');
+  const jobSel  = document.getElementById('asg-job-filter');
+  deptSel.innerHTML = '<option value="">全部部門</option>' + depts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  jobSel.innerHTML  = '<option value="">全部職類</option>' + jobs.map(j=>`<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`).join('');
+}
+function renderCandidateList(){
+  const dept = document.getElementById('asg-dept-filter').value;
+  const job  = document.getElementById('asg-job-filter').value;
+  const q    = (document.getElementById('asg-search').value||'').toLowerCase();
+  const assignedIds = new Set(courseAssignees.map(a=>a.empId.toUpperCase()));
+  const list = employeeMasterList.filter(e=>{
+    if(assignedIds.has(String(e.empId).toUpperCase())) return false;
+    if(dept && e.dept !== dept) return false;
+    if(job && e.jobType !== job) return false;
+    if(q && !(e.name+e.empId+e.dept).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const wrap = document.getElementById('asg-candidate-list');
+  document.getElementById('asg-select-all').checked = false;
+  if(!list.length){ wrap.innerHTML = '<div class="table-empty">無符合條件的員工（或皆已加入）</div>'; return; }
+  wrap.innerHTML = list.map(e=>`
+    <div class="cand-row">
+      <input type="checkbox" class="cand-check" value="${escapeHtml(e.empId)}">
+      <span><strong>${escapeHtml(e.name)}</strong></span>
+      <span class="cand-meta">${escapeHtml(e.empId)} · ${escapeHtml(e.dept||'—')} · ${escapeHtml(e.jobType||'—')}</span>
+      <input type="date" class="cand-deadline" data-empid="${escapeHtml(e.empId)}" style="margin-left:auto;width:150px" title="此人員的完成期限（優先於上方預設完成期限）">
+    </div>`).join('');
+}
+function toggleSelectAllCandidates(cb){
+  document.querySelectorAll('#asg-candidate-list .cand-check').forEach(el=>el.checked = cb.checked);
+}
+function addSelectedAssignees(){
+  const ids = Array.from(document.querySelectorAll('#asg-candidate-list .cand-check:checked')).map(el=>el.value);
+  if(!ids.length){ alert('請先勾選要加入的人員'); return; }
+  const defaultDeadline = document.getElementById('asg-default-deadline').value || '';
+  const list = employeeMasterList.filter(e=>ids.includes(e.empId)).map(e=>{
+    const rowInput = document.querySelector(`#asg-candidate-list .cand-deadline[data-empid="${CSS.escape(e.empId)}"]`);
+    const deadline = (rowInput && rowInput.value) ? rowInput.value : defaultDeadline;
+    return { empId:e.empId, name:e.name, dept:e.dept, jobType:e.jobType, email:e.email, deadline };
+  });
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'addCourseAssignees', courseId:currentCourseId, list }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='error'){ alert(d.message||'加入失敗'); return; }
+      loadCourseAssignees();
+    })
+    .catch(()=>alert('連線失敗，請稍後再試'));
+}
+
+function openAddAssigneeModal(){
+  ['aa-empid','aa-name','aa-dept','aa-job','aa-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('aa-err').style.display='none';
+  document.getElementById('modal-add-assignee').classList.add('open');
+}
+function closeAddAssigneeModal(){ document.getElementById('modal-add-assignee').classList.remove('open'); }
+document.getElementById('modal-add-assignee').addEventListener('click', function(e){ if(e.target===this) closeAddAssigneeModal(); });
+function saveAddAssignee(){
+  const empId = document.getElementById('aa-empid').value.trim();
+  const name  = document.getElementById('aa-name').value.trim();
+  const dept  = document.getElementById('aa-dept').value.trim();
+  const job   = document.getElementById('aa-job').value.trim();
+  const email = document.getElementById('aa-email').value.trim();
+  const errEl = document.getElementById('aa-err');
+  if(!empId || !name){ errEl.textContent='工號與姓名為必填'; errEl.style.display='block'; return; }
+  if(courseAssignees.some(a=>a.empId.toUpperCase()===empId.toUpperCase())){ errEl.textContent='此工號已在指定人員名單中'; errEl.style.display='block'; return; }
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'addCourseAssignees', courseId:currentCourseId, list:[{empId,name,dept,jobType:job,email}] }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='error'){ errEl.textContent=d.message||'新增失敗'; errEl.style.display='block'; return; }
+      closeAddAssigneeModal();
+      loadCourseAssignees();
+    })
+    .catch(()=>{ errEl.textContent='連線失敗，請稍後再試'; errEl.style.display='block'; });
+}
+
+function renderAssigneeTable(){
+  document.getElementById('asg-count').textContent = courseAssignees.length ? `（共 ${courseAssignees.length} 人）` : '';
+  const wrap = document.getElementById('asg-table-wrap');
+  if(!courseAssignees.length){ wrap.innerHTML = '<div class="table-empty">尚無指定人員，請於上方篩選加入或新增單一人員</div>'; return; }
+
+  const statusFilter = document.getElementById('asg-status-filter').value;
+  const list = courseAssignees.filter(a=>{
+    if(statusFilter === 'done') return !!a.completed;
+    if(statusFilter === 'pending') return !a.completed;
+    return true;
+  });
+  if(!list.length){ wrap.innerHTML = '<div class="table-empty">無符合條件的指定人員</div>'; return; }
+
+  wrap.innerHTML = `<table><thead><tr><th>#</th><th>工號</th><th>姓名</th><th>部門</th><th>職類</th><th>完成期限</th><th>狀態</th><th></th></tr></thead><tbody>
+    ${list.map((a,i)=>`<tr>
+      <td style="color:var(--ink3)">${i+1}</td><td>${escapeHtml(a.empId)}</td><td><strong>${escapeHtml(a.name)}</strong></td>
+      <td>${escapeHtml(a.dept||'—')}</td><td>${escapeHtml(a.jobType||'—')}</td><td style="color:var(--ink3)">${escapeHtml(a.deadline||'無期限')}</td>
+      <td>${a.completed ? '<span class="badge pass">已完成</span>' : '<span class="badge fail">未完成</span>'}</td>
+      <td><button class="btn-sm btn-danger" data-remove-empid="${escapeHtml(a.empId)}" data-remove-name="${escapeHtml(a.name)}">移除</button></td>
+    </tr>`).join('')}</tbody></table>`;
+  wrap.querySelectorAll('[data-remove-empid]').forEach(btn=>btn.addEventListener('click', ()=>removeAssignee(btn.dataset.removeEmpid, btn.dataset.removeName)));
+}
+function removeAssignee(empId, name){
+  if(!confirm(`確定要將「${name}」從本課程指定人員中移除？`)) return;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'deleteCourseAssignee', courseId:currentCourseId, empId }) })
+    .then(r=>r.json())
+    .then(d=>{ if(d.status==='error'){ alert(d.message||'移除失敗'); return; } loadCourseAssignees(); })
+    .catch(()=>alert('連線失敗，請稍後再試'));
+}
+
+// ── 通知設定 ──
+function loadCourseReminderSettings(){
+  fetch(`${GS_URL}?action=getReminderSettings&courseId=${encodeURIComponent(currentCourseId)}`)
+    .then(r=>r.json())
+    .then(d=>{
+      document.getElementById('notif-enabled').checked = d.enabled === 'true';
+      document.getElementById('notif-start-date').value = d.startDate || '';
+      document.getElementById('notif-days-before').value = d.daysBeforeDeadline || '7';
+      document.getElementById('notif-frequency').value = d.frequency || '7';
+      const mode = d.startMode === 'beforeDeadline' ? 'notif-mode-deadline' : 'notif-mode-fixed';
+      document.getElementById(mode).checked = true;
+      updateNotifToggleStatus();
+      updateNotifStartModeUI();
+      const lastEl = document.getElementById('notif-last-sent');
+      lastEl.textContent = d.lastSent ? `上次發送：${new Date(d.lastSent).toLocaleString('zh-TW')}` : '';
+    })
+    .catch(()=>{});
+}
+document.getElementById('notif-enabled').addEventListener('change', updateNotifToggleStatus);
+function updateNotifToggleStatus(){
+  const on = document.getElementById('notif-enabled').checked;
+  document.getElementById('notif-status-text').innerHTML = on ? '<span class="status-dot on"></span>已啟用' : '<span class="status-dot off"></span>未啟用';
+}
+function updateNotifStartModeUI(){
+  const isFixed = document.getElementById('notif-mode-fixed').checked;
+  document.getElementById('notif-start-date').disabled = !isFixed;
+  document.getElementById('notif-days-before').disabled = isFixed;
+}
+function saveReminderSettingsClick(){
+  const enabled = document.getElementById('notif-enabled').checked;
+  const startMode = document.getElementById('notif-mode-deadline').checked ? 'beforeDeadline' : 'fixedDate';
+  const startDate = document.getElementById('notif-start-date').value;
+  const daysBeforeDeadline = parseInt(document.getElementById('notif-days-before').value) || 0;
+  const frequency = parseInt(document.getElementById('notif-frequency').value) || 7;
+  const resEl = document.getElementById('notif-save-result');
+  if(enabled && startMode === 'fixedDate' && !startDate){ resEl.style.color='var(--red)'; resEl.textContent='⚠️ 請設定起始通知日期'; return; }
+  if(enabled && startMode === 'beforeDeadline' && daysBeforeDeadline <= 0){ resEl.style.color='var(--red)'; resEl.textContent='⚠️ 請設定完成期限前幾天啟動通知'; return; }
+  resEl.style.color='var(--ink3)'; resEl.textContent='儲存中…';
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'setReminderSchedule', courseId:currentCourseId, enabled, startMode, startDate, daysBeforeDeadline, frequency }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok'){ resEl.style.color='var(--green)'; resEl.textContent='✅ 設定已儲存'; }
+      else { resEl.style.color='var(--red)'; resEl.textContent='❌ '+(d.message||'儲存失敗'); }
+      setTimeout(()=>resEl.textContent='',4000);
+    })
+    .catch(()=>{ resEl.style.color='var(--red)'; resEl.textContent='❌ 連線失敗'; });
+}
+function sendInitialNotificationClick(){
+  if(!confirm('確定要立即發送通知信給本課程全體指定人員嗎？')) return;
+  const resEl = document.getElementById('notif-send-result');
+  resEl.style.color='var(--ink3)'; resEl.textContent='發送中…';
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'sendInitialNotification', courseId:currentCourseId }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok'){ resEl.style.color='var(--green)'; resEl.textContent=`✅ 已發送 ${d.sent} 封，略過 ${d.skipped} 筆（無 Email）`; }
+      else { resEl.style.color='var(--red)'; resEl.textContent='❌ '+(d.message||'發送失敗'); }
+      setTimeout(()=>resEl.textContent='',6000);
+    })
+    .catch(()=>{ resEl.style.color='var(--red)'; resEl.textContent='❌ 連線失敗'; });
+}
+
+// ── 觀看／測驗紀錄 ──
+let courseRecordsData = [];
+function loadCourseRecords(){
+  if(!currentCourseId) return;
+  const wrap = document.getElementById('cr-table-wrap');
+  wrap.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div>';
+  fetch(`${GS_URL}?action=getCourseRecords&courseId=${encodeURIComponent(currentCourseId)}`)
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.found){ wrap.innerHTML = '<div class="table-empty">找不到課程</div>'; return; }
+      courseRecordsData = d.records || [];
+      const total = courseRecordsData.length;
+      const completed = courseRecordsData.filter(r=>r.completed).length;
+      document.getElementById('rst-total').textContent = total;
+      document.getElementById('rst-passed').textContent = completed;
+      document.getElementById('rst-failed').textContent = total - completed;
+      document.getElementById('rst-rate').textContent = total ? Math.round(completed/total*100)+'%' : '0%';
+      renderCourseRecordsTable(d.course.hasQuiz);
+    })
+    .catch(()=>{ wrap.innerHTML = '<div class="table-empty">❌ 無法連線至 Google 試算表</div>'; });
+}
+function renderCourseRecordsTable(hasQuiz){
+  const wrap = document.getElementById('cr-table-wrap');
+  if(!courseRecordsData.length){ wrap.innerHTML = '<div class="table-empty">尚無指定人員，請至「指定人員」分頁加入</div>'; return; }
+  wrap.innerHTML = `<table><thead><tr>
+    <th>部門</th><th>工號</th><th>姓名</th><th>影片狀態</th><th>觀看進度</th>
+    ${hasQuiz?'<th>測驗分數</th><th>是否及格</th>':''}
+    <th>完成時間</th><th></th>
+  </tr></thead><tbody>${courseRecordsData.map((r,i)=>`<tr>
+    <td>${escapeHtml(r.dept||'—')}</td><td style="color:var(--ink3)">${escapeHtml(r.empId)}</td><td><strong>${escapeHtml(r.name)}</strong></td>
+    <td><span class="badge ${r.videoDone?'pass':'neutral'}">${r.videoStatus}</span></td>
+    <td><span class="progress-bar-wrap"><span class="progress-bar-fill" style="width:${r.percent}%"></span></span>${r.percent}%</td>
+    ${hasQuiz?`<td>${r.quizAttempted? r.quizScore+'分' : '—'}</td><td>${r.quizAttempted? (r.quizPassed?'<span class="badge pass">及格</span>':'<span class="badge fail">未及格</span>') : '—'}</td>`:''}
+    <td style="white-space:nowrap;color:var(--ink3)">${r.completed ? formatTimestamp(r.completedAt) : '—'}</td>
+    <td style="white-space:nowrap">
+      <button class="btn-sm btn-secondary" data-detail-idx="${i}">詳情</button>
+      <button class="btn-sm btn-danger" data-reset-idx="${i}" style="margin-left:.35rem">重置進度</button>
+    </td>
+  </tr>`).join('')}</tbody></table>`;
+  wrap.querySelectorAll('[data-detail-idx]').forEach(btn=>btn.addEventListener('click', ()=>showRecordDetail(Number(btn.dataset.detailIdx), hasQuiz)));
+  wrap.querySelectorAll('[data-reset-idx]').forEach(btn=>btn.addEventListener('click', ()=>resetRecord(Number(btn.dataset.resetIdx))));
+}
+function showRecordDetail(idx, hasQuiz){
+  const r = courseRecordsData[idx];
+  document.getElementById('modal-body').innerHTML = `
+    <div class="score-big">
+      <div class="num ${r.completed?'pass':'fail'}">${r.completed?'✅':'⏳'}</div>
+      <div style="font-size:1.05rem;font-weight:700;color:var(--ink2);margin:.4rem 0 .2rem">${r.name}（${r.dept||'—'}）</div>
+      <div class="sub"><span class="badge ${r.completed?'pass':'fail'}">${r.completed?'已完成課程':'尚未完成'}</span></div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="lbl">影片狀態</div><div class="val">${r.videoStatus}</div></div>
+      <div class="detail-item"><div class="lbl">觀看時長</div><div class="val">${formatWatchTime(r.watchedSeconds)}（${r.percent}%）</div></div>
+      ${hasQuiz?`<div class="detail-item"><div class="lbl">測驗分數</div><div class="val">${r.quizAttempted? r.quizScore+'分' : '尚未測驗'}</div></div>
+      <div class="detail-item"><div class="lbl">測驗結果</div><div class="val">${r.quizAttempted? (r.quizPassed?'及格':'未及格') : '—'}</div></div>`:''}
+      <div class="detail-item"><div class="lbl">完成時間</div><div class="val">${r.completed?formatTimestamp(r.completedAt):'—'}</div></div>
+    </div>`;
+  document.getElementById('modal-detail').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-detail').classList.remove('open'); }
+document.getElementById('modal-detail').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+function resetRecord(idx){
+  const r = courseRecordsData[idx];
+  if(!confirm(`確定要重置「${r.name}」在本課程的觀看與測驗進度？此操作無法復原。`)) return;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'resetCourseProgress', courseId:currentCourseId, empId:r.empId }) })
+    .then(r2=>r2.json())
+    .then(d=>{ if(d.status==='error'){ alert(d.message||'重置失敗'); return; } loadCourseRecords(); })
+    .catch(()=>alert('連線失敗，請稍後再試'));
+}
+
+// ═══════════ 員工總表 ═══════════
+let allEmployees = [];
+let filteredEmployees = [];
+
+let empSortState = { col:'', asc:true };
+
+function loadEmployeeMaster(){
+  const wrap = document.getElementById('emp-table-wrap');
+  wrap.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div>';
+  fetch(`${GS_URL}?action=getEmployeeMaster`)
+    .then(r=>r.json())
+    .then(d=>{ allEmployees = d.employees || []; populateEmployeeFilters(); filterEmployeeTable(); })
+    .catch(()=>{ wrap.innerHTML = '<div class="table-empty">❌ 無法連線至 Google 試算表</div>'; });
+}
+function populateEmployeeFilters(){
+  const depts = Array.from(new Set(allEmployees.map(e=>e.dept).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-TW'));
+  const jobs  = Array.from(new Set(allEmployees.map(e=>e.jobType).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-TW'));
+  const deptSel = document.getElementById('emp-dept-filter');
+  const jobSel  = document.getElementById('emp-job-filter');
+  const curDept = deptSel.value, curJob = jobSel.value;
+  deptSel.innerHTML = '<option value="">所有部門</option>' + depts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  jobSel.innerHTML  = '<option value="">所有職類</option>' + jobs.map(j=>`<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`).join('');
+  if(depts.includes(curDept)) deptSel.value = curDept;
+  if(jobs.includes(curJob)) jobSel.value = curJob;
+}
+function filterEmployeeTable(){
+  const q = (document.getElementById('emp-search').value||'').toLowerCase();
+  const dept = document.getElementById('emp-dept-filter').value;
+  const job  = document.getElementById('emp-job-filter').value;
+  filteredEmployees = allEmployees.filter(e=>{
+    if(dept && e.dept !== dept) return false;
+    if(job && e.jobType !== job) return false;
+    return !q || (e.name+e.empId+e.dept+e.jobType).toLowerCase().includes(q);
+  });
+  renderEmployeeTable();
+}
+
+// ═══════════ 檔案下載 ═══════════
+let exportCourses = [];
+
+function loadExportTab(){
+  fetch(`${GS_URL}?action=getCourses`)
+    .then(r=>r.json())
+    .then(d=>{
+      exportCourses = d.courses || [];
+      const types = Array.from(new Set(exportCourses.map(c=>c.courseType).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-TW'));
+      const sel = document.getElementById('exp-course-type');
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">所有類型</option>' + types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+      if(types.includes(cur)) sel.value = cur;
+      updateExportCoursePreview();
+    });
+  fetch(`${GS_URL}?action=getEmployeeMaster`)
+    .then(r=>r.json())
+    .then(d=>{
+      const employees = d.employees || [];
+      const depts = Array.from(new Set(employees.map(e=>e.dept).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-TW'));
+      const jobs  = Array.from(new Set(employees.map(e=>e.jobType).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-TW'));
+      const deptSel = document.getElementById('exp-dept');
+      const jobSel  = document.getElementById('exp-jobtype');
+      const curDept = deptSel.value, curJob = jobSel.value;
+      deptSel.innerHTML = '<option value="">所有部門</option>' + depts.map(dd=>`<option value="${escapeHtml(dd)}">${escapeHtml(dd)}</option>`).join('');
+      jobSel.innerHTML  = '<option value="">所有職類</option>' + jobs.map(j=>`<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`).join('');
+      if(depts.includes(curDept)) deptSel.value = curDept;
+      if(jobs.includes(curJob)) jobSel.value = curJob;
+    });
+}
+
+let exportFilteredCourses = [];
+let exportDeselectedCourseIds = new Set();
+
+function updateExportCoursePreview(){
+  const startFrom = document.getElementById('exp-start-from').value;
+  const startTo = document.getElementById('exp-start-to').value;
+  const courseType = document.getElementById('exp-course-type').value;
+  const status = document.getElementById('exp-status').value;
+  const list = exportCourses.filter(c=>{
+    if(courseType && c.courseType !== courseType) return false;
+    if(status === 'active' && c.active === false) return false;
+    if(status === 'inactive' && c.active !== false) return false;
+    if(startFrom && (!c.startDate || c.startDate < startFrom)) return false;
+    if(startTo && (!c.startDate || c.startDate > startTo)) return false;
+    return true;
+  });
+  exportFilteredCourses = list;
+  document.getElementById('exp-course-count').textContent = `（${list.length}）`;
+  const wrap = document.getElementById('exp-course-preview-wrap');
+  if(!exportCourses.length){ wrap.innerHTML = '<div class="table-empty">尚無課程資料</div>'; return; }
+  if(!list.length){ wrap.innerHTML = '<div class="table-empty">無符合篩選條件的課程</div>'; return; }
+  wrap.innerHTML = `<table><thead><tr><th><input type="checkbox" id="exp-select-all" onchange="toggleExportSelectAll()"></th><th>課程名稱</th><th>課程類型</th><th>起始日期</th><th>狀態</th><th>指定人數</th></tr></thead><tbody>
+    ${list.map(c=>`<tr>
+      <td><input type="checkbox" data-course-id="${escapeHtml(c.id)}" ${exportDeselectedCourseIds.has(c.id)?'':'checked'} onchange="toggleExportCourseSelection('${escapeHtml(c.id)}', this.checked)"></td>
+      <td><strong>${escapeHtml(c.name)}</strong></td>
+      <td>${escapeHtml(c.courseType||'—')}</td>
+      <td>${escapeHtml(c.startDate||'—')}</td>
+      <td>${c.active!==false?'<span class="badge pass">進行中</span>':'<span class="badge neutral">關閉</span>'}</td>
+      <td>${c.total}</td>
+    </tr>`).join('')}
+    </tbody></table>`;
+  updateExportSelectAllState();
+}
+
+function toggleExportCourseSelection(courseId, checked){
+  if(checked) exportDeselectedCourseIds.delete(courseId);
+  else exportDeselectedCourseIds.add(courseId);
+  updateExportSelectAllState();
+}
+
+function toggleExportSelectAll(){
+  const checked = document.getElementById('exp-select-all').checked;
+  exportFilteredCourses.forEach(c=>{
+    if(checked) exportDeselectedCourseIds.delete(c.id);
+    else exportDeselectedCourseIds.add(c.id);
+  });
+  updateExportCoursePreview();
+}
+
+function updateExportSelectAllState(){
+  const selectAllBox = document.getElementById('exp-select-all');
+  if(!selectAllBox || !exportFilteredCourses.length) return;
+  const selectedCount = exportFilteredCourses.filter(c=>!exportDeselectedCourseIds.has(c.id)).length;
+  selectAllBox.checked = selectedCount === exportFilteredCourses.length;
+  selectAllBox.indeterminate = selectedCount > 0 && selectedCount < exportFilteredCourses.length;
+}
+
+function exportCourseAssigneesExcel(){
+  const statusMsg = document.getElementById('exp-status-msg');
+  const selectedIds = exportFilteredCourses.filter(c=>!exportDeselectedCourseIds.has(c.id)).map(c=>c.id);
+  if(!exportFilteredCourses.length){ statusMsg.style.color = 'var(--red)'; statusMsg.textContent = '⚠️ 查無符合條件的課程'; return; }
+  if(!selectedIds.length){ statusMsg.style.color = 'var(--red)'; statusMsg.textContent = '⚠️ 請至少勾選一個課程'; return; }
+  const params = new URLSearchParams({
+    action: 'getExportData',
+    startFrom: document.getElementById('exp-start-from').value,
+    startTo: document.getElementById('exp-start-to').value,
+    courseType: document.getElementById('exp-course-type').value,
+    status: document.getElementById('exp-status').value,
+    dept: document.getElementById('exp-dept').value,
+    jobType: document.getElementById('exp-jobtype').value,
+    courseIds: selectedIds.join(',')
+  });
+  statusMsg.style.color = 'var(--ink3)'; statusMsg.textContent = '資料匯出中…';
+  fetch(`${GS_URL}?${params.toString()}`)
+    .then(r=>r.json())
+    .then(async d=>{
+      const rows = d.rows || [];
+      if(!rows.length){ statusMsg.style.color = 'var(--red)'; statusMsg.textContent = '⚠️ 查無符合條件的資料'; return; }
+      const header = ['課程名稱','課程類別','課程時數','工號','姓名','部門','職類','影片觀看','測驗紀錄','課程完成時間'];
+
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('課程指定人員');
+      ws.addRow(header);
+      rows.forEach(r=>ws.addRow([r.courseName, r.courseType, r.courseHours, r.empId, r.name, r.dept, r.jobType, r.videoStatus, r.quizResult, r.completedAt]));
+      ws.columns.forEach(col=>{ col.width = 16; });
+
+      ws.getRow(1).eachCell(cell=>{
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFE8671A'} };
+        cell.font = { name:'微軟正黑體', size:12, bold:true, color:{argb:'FFFFFFFF'} };
+        cell.alignment = { horizontal:'center', vertical:'middle' };
+      });
+      ws.eachRow(row=>{
+        row.eachCell(cell=>{
+          if(!cell.font) cell.font = { name:'微軟正黑體', size:12 };
+          cell.alignment = { horizontal:'center', vertical:'middle' };
+        });
+      });
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `課程指定人員匯出_${stamp}.xlsx`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      statusMsg.style.color = 'var(--green)'; statusMsg.textContent = `✅ 已匯出 ${rows.length} 筆資料`;
+    })
+    .catch(()=>{ statusMsg.style.color = 'var(--red)'; statusMsg.textContent = '❌ 連線失敗'; });
+}
+
+const EMP_COL_GETTERS = {
+  empId: e=>e.empId||'', name: e=>e.name||'', dept: e=>e.dept||'', jobType: e=>e.jobType||'',
+  requiredCourses: e=>e.requiredCourses||0, completedCourses: e=>e.completedCourses||0,
+  incompleteCourses: e=>e.incompleteCourses||0, email: e=>e.email||''
+};
+const EMP_COL_NUMERIC = new Set(['requiredCourses','completedCourses','incompleteCourses']);
+
+function sortEmployeeTable(col){ toggleSort(empSortState, col); renderEmployeeTable(); }
+
+function renderEmployeeTable(){
+  document.getElementById('emp-count').textContent = filteredEmployees.length ? `（共 ${filteredEmployees.length} 人）` : '';
+  const wrap = document.getElementById('emp-table-wrap');
+  if(!allEmployees.length){ wrap.innerHTML = '<div class="table-empty">尚無員工資料，請點擊「新增員工」或「批次上傳」</div>'; return; }
+  if(!filteredEmployees.length){ wrap.innerHTML = '<div class="table-empty">無符合條件的員工</div>'; return; }
+
+  let list = filteredEmployees.slice();
+  if(empSortState.col){
+    const getter = EMP_COL_GETTERS[empSortState.col];
+    const numeric = EMP_COL_NUMERIC.has(empSortState.col);
+    const dir = empSortState.asc ? 1 : -1;
+    list.sort((a,b)=>compareVals(getter(a), getter(b), numeric) * dir);
+  }
+
+  wrap.innerHTML = `<table><thead><tr>
+    <th>#</th>${sortableTh('工號','empId',empSortState)}${sortableTh('姓名','name',empSortState)}${sortableTh('部門','dept',empSortState)}${sortableTh('職類','jobType',empSortState)}${sortableTh('應上課程','requiredCourses',empSortState)}${sortableTh('已完成','completedCourses',empSortState)}${sortableTh('未完成','incompleteCourses',empSortState)}${sortableTh('Email','email',empSortState)}<th></th>
+  </tr></thead><tbody>
+    ${list.map((e,i)=>`<tr>
+      <td style="color:var(--ink3)">${i+1}</td><td>${escapeHtml(e.empId)}</td><td><strong>${escapeHtml(e.name)}</strong></td>
+      <td>${escapeHtml(e.dept||'—')}</td><td>${escapeHtml(e.jobType||'—')}</td>
+      <td>${e.requiredCourses||0}</td>
+      <td>${e.completedCourses ? `<span class="badge pass">${e.completedCourses}</span>` : '0'}</td>
+      <td>${e.incompleteCourses ? `<span class="badge fail">${e.incompleteCourses}</span>` : '0'}</td>
+      <td style="color:var(--ink3)">${escapeHtml(e.email||'—')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-sm btn-secondary" data-mgr-emp="${escapeHtml(e.empId)}">課程管理</button>
+        <button class="btn-sm btn-danger" data-del-emp="${escapeHtml(e.empId)}" data-del-emp-name="${escapeHtml(e.name)}" style="margin-left:.35rem">刪除</button>
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+  wrap.querySelectorAll('[data-del-emp]').forEach(btn=>btn.addEventListener('click', ()=>deleteEmployee(btn.dataset.delEmp, btn.dataset.delEmpName)));
+  wrap.querySelectorAll('[data-mgr-emp]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const emp = filteredEmployees.find(x=>x.empId===btn.dataset.mgrEmp);
+    if(emp) openEmployeeCourseModal(emp);
+  }));
+  wrap.querySelectorAll('th[data-sort-col]').forEach(th=>th.addEventListener('click', ()=>sortEmployeeTable(th.dataset.sortCol)));
+}
+function deleteEmployee(empId, name){
+  if(!confirm(`確定要從員工總表中刪除「${name}」？（不會影響已加入各課程的指定人員紀錄）`)) return;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'deleteEmployee', empId }) })
+    .then(r=>r.json())
+    .then(d=>{ if(d.status==='error'){ alert(d.message||'刪除失敗'); return; } loadEmployeeMaster(); })
+    .catch(()=>alert('連線失敗，請稍後再試'));
+}
+
+// ── 員工「課程管理」：指定該員工需上哪些課程 ──
+// empCourseSelectionState 是勾選狀態的唯一資料來源，即使切換「課程類型」篩選重繪列表，已勾選/已填的期限也不會遺失
+let empCourseTarget = null;
+let empCourseAllCourses = [];
+let empCourseSelectionState = {}; // courseId -> { checked, deadline }
+
+function openEmployeeCourseModal(emp){
+  empCourseTarget = emp;
+  document.getElementById('emp-courses-modal-title').textContent = `課程管理－${emp.name}（${emp.empId}）`;
+  document.getElementById('emp-courses-list').innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div>資料載入中…</div></div>';
+  document.getElementById('ec-default-deadline').value = '';
+  document.getElementById('ec-start-date-filter').value = '';
+  document.getElementById('modal-emp-courses').classList.add('open');
+
+  Promise.all([
+    fetch(`${GS_URL}?action=getCourses`).then(r=>r.json()).catch(()=>({courses:[]})),
+    fetch(`${GS_URL}?action=getEmployeeCourses&empId=${encodeURIComponent(emp.empId)}`).then(r=>r.json()).catch(()=>({courses:[]}))
+  ]).then(([coursesRes, assignedRes])=>{
+    empCourseAllCourses = coursesRes.courses || [];
+    empCourseSelectionState = {};
+    (assignedRes.courses||[]).forEach(a=>{ empCourseSelectionState[String(a.courseId)] = { checked:true, deadline:a.deadline||'' }; });
+    populateEmpCourseTypeFilter();
+    renderEmpCoursesList();
+  });
+}
+function closeEmployeeCourseModal(){ document.getElementById('modal-emp-courses').classList.remove('open'); }
+document.getElementById('modal-emp-courses').addEventListener('click', function(e){ if(e.target===this) closeEmployeeCourseModal(); });
+
+function populateEmpCourseTypeFilter(){
+  const types = Array.from(new Set(empCourseAllCourses.map(c=>c.courseType).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-TW'));
+  const sel = document.getElementById('ec-type-filter');
+  sel.innerHTML = '<option value="">全部類型</option>' + types.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+}
+
+function renderEmpCoursesList(){
+  const wrap = document.getElementById('emp-courses-list');
+  document.getElementById('ec-select-all').checked = false;
+  if(!empCourseAllCourses.length){ wrap.innerHTML = '<div class="table-empty">尚無課程，請先至「課程管理」新增課程</div>'; return; }
+  const startDateFilter = document.getElementById('ec-start-date-filter').value;
+  const typeFilter = document.getElementById('ec-type-filter').value;
+  let list = empCourseAllCourses.filter(c=>c.active!==false);
+  if(startDateFilter) list = list.filter(c=>c.startDate && c.startDate >= startDateFilter);
+  if(typeFilter) list = list.filter(c=>c.courseType===typeFilter);
+  if(!list.length){ wrap.innerHTML = '<div class="table-empty">無符合條件的課程</div>'; return; }
+  wrap.innerHTML = list.map(c=>{
+    const state = empCourseSelectionState[String(c.id)] || { checked:false, deadline:'' };
+    return `
+    <label class="cand-row" style="cursor:pointer">
+      <input type="checkbox" class="emp-course-check" data-course-id="${escapeHtml(c.id)}" ${state.checked?'checked':''}>
+      <span style="flex:1"><strong>${escapeHtml(c.name)}</strong></span>
+      <span class="cand-meta">${c.videoRequired!==false?'有影片':'無影片'}</span>
+      <span class="cand-meta">${c.hasQuiz?'需測驗':'無測驗'}</span>
+      <span class="cand-meta">完成期限</span>
+      <input type="date" class="ec-course-deadline" data-course-id="${escapeHtml(c.id)}" value="${state.deadline||''}" style="width:150px" onclick="event.stopPropagation()" title="此課程的完成期限（優先於上方預設完成期限）">
+    </label>`;
+  }).join('');
+  wrap.querySelectorAll('.emp-course-check').forEach(cb=>cb.addEventListener('change', function(){
+    const cid = this.dataset.courseId;
+    const prev = empCourseSelectionState[cid] || { deadline:'' };
+    empCourseSelectionState[cid] = { checked: this.checked, deadline: prev.deadline };
+  }));
+  wrap.querySelectorAll('.ec-course-deadline').forEach(inp=>inp.addEventListener('input', function(){
+    const cid = this.dataset.courseId;
+    const prev = empCourseSelectionState[cid] || { checked:false };
+    empCourseSelectionState[cid] = { checked: prev.checked, deadline: this.value };
+  }));
+}
+function toggleSelectAllEmpCourses(cb){
+  document.querySelectorAll('#emp-courses-list .emp-course-check').forEach(el=>{
+    el.checked = cb.checked;
+    el.dispatchEvent(new Event('change'));
+  });
+}
+
+function saveEmployeeCourses(){
+  const defaultDeadline = document.getElementById('ec-default-deadline').value || '';
+  const courses = Object.keys(empCourseSelectionState)
+    .filter(cid => empCourseSelectionState[cid].checked)
+    .map(cid => ({ courseId: cid, deadline: empCourseSelectionState[cid].deadline || defaultDeadline }));
+  const t = empCourseTarget;
+  const btn = document.getElementById('emp-courses-save-btn');
+  btn.textContent = '儲存中…'; btn.disabled = true;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'setEmployeeCourses', empId:t.empId, name:t.name, dept:t.dept, jobType:t.jobType, email:t.email, courses }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='error'){ alert(d.message||'儲存失敗'); return; }
+      closeEmployeeCourseModal();
+      loadEmployeeMaster();
+    })
+    .catch(()=>alert('連線失敗，請稍後再試'))
+    .finally(()=>{ btn.textContent='儲存'; btn.disabled=false; });
+}
+
+function openAddEmployeeModal(){
+  ['emp-empid','emp-name','emp-dept','emp-job','emp-email','emp-password'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('emp-add-err').style.display='none';
+  document.getElementById('modal-emp-add').classList.add('open');
+}
+function closeAddEmployeeModal(){ document.getElementById('modal-emp-add').classList.remove('open'); }
+document.getElementById('modal-emp-add').addEventListener('click', function(e){ if(e.target===this) closeAddEmployeeModal(); });
+function saveAddEmployee(){
+  const empId = document.getElementById('emp-empid').value.trim();
+  const name  = document.getElementById('emp-name').value.trim();
+  const dept  = document.getElementById('emp-dept').value.trim();
+  const job   = document.getElementById('emp-job').value.trim();
+  const email = document.getElementById('emp-email').value.trim();
+  const password = document.getElementById('emp-password').value.trim();
+  const errEl = document.getElementById('emp-add-err');
+  if(!empId || !name){ errEl.textContent='工號與姓名為必填'; errEl.style.display='block'; return; }
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'addEmployee', empId, name, dept, jobType:job, email, password }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='error'){ errEl.textContent=d.message||'新增失敗'; errEl.style.display='block'; return; }
+      closeAddEmployeeModal();
+      loadEmployeeMaster();
+    })
+    .catch(()=>{ errEl.textContent='連線失敗，請稍後再試'; errEl.style.display='block'; });
+}
+
+// ── 員工總表 批次上傳 ──
+let parsedEmpUploadData = [];
+function openEmpUploadModal(){
+  parsedEmpUploadData = [];
+  document.getElementById('emp-csv-paste').value = '';
+  document.getElementById('emp-file-name').textContent = '';
+  document.getElementById('emp-upload-preview').textContent = '';
+  document.getElementById('emp-upload-err').style.display = 'none';
+  document.getElementById('modal-emp-upload').classList.add('open');
+}
+function closeEmpUploadModal(){ document.getElementById('modal-emp-upload').classList.remove('open'); }
+document.getElementById('modal-emp-upload').addEventListener('click', function(e){ if(e.target===this) closeEmpUploadModal(); });
+
+let empSyncHeaders = [];
+
+function loadEmpSyncTab(){
+  document.getElementById('emp-sync-headers-msg').textContent = '';
+  document.getElementById('emp-sync-mapping-area').style.display = 'none';
+  document.getElementById('emp-sync-result').textContent = '';
+  fetch(`${GS_URL}?action=getEmpSyncConfigInfo`)
+    .then(r=>r.json())
+    .then(cfg=>{
+      document.getElementById('emp-sync-filename').value = cfg.fileName || '';
+      document.getElementById('emp-sync-header-row').value = cfg.headerRow || 1;
+      document.getElementById('emp-sync-auto-toggle').checked = !!cfg.autoSyncEnabled;
+      document.getElementById('emp-sync-auto-hour').value = cfg.autoSyncHour != null ? cfg.autoSyncHour : 2;
+      updateEmpSyncAutoStatus();
+      if(cfg.fileName) loadSyncFieldHeaders(cfg.mapping || {});
+    })
+    .catch(()=>{});
+}
+
+function updateEmpSyncAutoStatus(){
+  const on = document.getElementById('emp-sync-auto-toggle').checked;
+  document.getElementById('emp-sync-auto-text').innerHTML = on ? '<span class="status-dot on"></span>開啟' : '<span class="status-dot off"></span>關閉';
+}
+
+function loadSyncFieldHeaders(prefillMapping){
+  const fileName = document.getElementById('emp-sync-filename').value.trim();
+  const headerRow = document.getElementById('emp-sync-header-row').value || 1;
+  const msgEl = document.getElementById('emp-sync-headers-msg');
+  if(!fileName){ msgEl.style.color='var(--red)'; msgEl.textContent='⚠️ 請先輸入檔名'; return; }
+  msgEl.style.color='var(--ink3)'; msgEl.textContent='讀取中…';
+  fetch(`${GS_URL}?action=getSyncFieldHeaders&fileName=${encodeURIComponent(fileName)}&headerRow=${encodeURIComponent(headerRow)}`)
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.found){
+        msgEl.style.color='var(--red)'; msgEl.textContent='❌ ' + (d.message||'讀取失敗');
+        document.getElementById('emp-sync-mapping-area').style.display='none';
+        return;
+      }
+      empSyncHeaders = d.headers;
+      msgEl.style.color='var(--green)'; msgEl.textContent = `✅ 已讀取「${d.fileName}」，共 ${d.headers.length} 個欄位`;
+      populateSyncMappingSelects(prefillMapping || {});
+      document.getElementById('emp-sync-mapping-area').style.display='block';
+    })
+    .catch(()=>{ msgEl.style.color='var(--red)'; msgEl.textContent='❌ 連線失敗'; });
+}
+
+function populateSyncMappingSelects(prefill){
+  const fields = ['empId','status','name','dept','jobType','email'];
+  fields.forEach(key=>{
+    const sel = document.getElementById('emp-sync-map-'+key);
+    sel.innerHTML = '<option value="">（不對應）</option>' + empSyncHeaders.map(h=>`<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join('');
+    if(prefill[key] && empSyncHeaders.includes(prefill[key])) sel.value = prefill[key];
+  });
+}
+
+function saveSyncMapping(){
+  const fileName = document.getElementById('emp-sync-filename').value.trim();
+  const headerRow = document.getElementById('emp-sync-header-row').value || 1;
+  const mapping = {
+    empId: document.getElementById('emp-sync-map-empId').value,
+    status: document.getElementById('emp-sync-map-status').value,
+    name: document.getElementById('emp-sync-map-name').value,
+    dept: document.getElementById('emp-sync-map-dept').value,
+    jobType: document.getElementById('emp-sync-map-jobType').value,
+    email: document.getElementById('emp-sync-map-email').value
+  };
+  const autoSyncEnabled = document.getElementById('emp-sync-auto-toggle').checked;
+  const autoSyncHour = document.getElementById('emp-sync-auto-hour').value;
+  const statusEl = document.getElementById('emp-sync-map-savemsg');
+  const autoStatusEl = document.getElementById('emp-sync-auto-savemsg');
+  function setStatus(color, text){
+    statusEl.style.color = color; statusEl.textContent = text;
+    autoStatusEl.style.color = color; autoStatusEl.textContent = text;
+  }
+  if(!mapping.empId){ setStatus('var(--red)', '⚠️ 「工號」為必要對應欄位'); return; }
+  if(!mapping.status){ setStatus('var(--red)', '⚠️ 「在職狀態」為必要對應欄位'); return; }
+  setStatus('var(--ink3)', '儲存中…');
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'saveEmpSyncConfig', fileName, headerRow, mapping, autoSyncEnabled, autoSyncHour }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='ok'){ setStatus('var(--green)', '✅ 已儲存'); }
+      else { setStatus('var(--red)', '❌ ' + (d.message||'儲存失敗')); }
+      setTimeout(()=>{ statusEl.textContent=''; autoStatusEl.textContent=''; },3000);
+    })
+    .catch(()=>{ setStatus('var(--red)', '❌ 連線失敗'); });
+}
+
+function confirmEmpSync(){
+  if(!confirm('此操作將依來源檔案新增／更新員工總表資料，離職或來源檔案中已不存在的工號將被「刪除」，是否繼續？')) return;
+  const resultEl = document.getElementById('emp-sync-result');
+  const btn = document.getElementById('emp-sync-confirm-btn');
+  resultEl.style.color = 'var(--ink3)'; resultEl.textContent = '同步中…';
+  btn.disabled = true;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'syncEmployeeMasterFromDrive' }) })
+    .then(r=>r.json())
+    .then(d=>{
+      btn.disabled = false;
+      if(d.status === 'ok'){
+        resultEl.style.color = 'var(--green)';
+        resultEl.textContent = `✅ 同步完成：新增 ${d.added} 筆、更新 ${d.updated} 筆、刪除 ${d.deleted} 筆`;
+        loadEmployeeMaster();
+      } else {
+        resultEl.style.color = 'var(--red)';
+        resultEl.textContent = '❌ ' + (d.message || '同步失敗');
+      }
+    })
+    .catch(()=>{ btn.disabled = false; resultEl.style.color = 'var(--red)'; resultEl.textContent = '❌ 連線失敗'; });
+}
+
+const empUploadZone = document.getElementById('emp-upload-zone');
+empUploadZone.addEventListener('dragover', e=>{ e.preventDefault(); empUploadZone.classList.add('drag'); });
+empUploadZone.addEventListener('dragleave', ()=>empUploadZone.classList.remove('drag'));
+empUploadZone.addEventListener('drop', e=>{
+  e.preventDefault(); empUploadZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if(file) readEmpCsvFile(file);
+});
+function handleEmpFileSelect(e){ const file = e.target.files[0]; if(file) readEmpCsvFile(file); }
+function readEmpCsvFile(file){
+  document.getElementById('emp-file-name').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = evt => { document.getElementById('emp-csv-paste').value = evt.target.result; previewEmpCsv(evt.target.result); };
+  reader.readAsText(file, 'UTF-8');
+}
+document.getElementById('emp-csv-paste').addEventListener('input', function(){ previewEmpCsv(this.value); });
+function previewEmpCsv(text){
+  const errEl = document.getElementById('emp-upload-err');
+  errEl.style.display = 'none';
+  parsedEmpUploadData = [];
+  const lines = text.trim().split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length){ document.getElementById('emp-upload-preview').textContent=''; return; }
+  const start = /工號|empid/i.test(lines[0]) ? 1 : 0;
+  const rows = lines.slice(start);
+  const errors = [];
+  parsedEmpUploadData = rows.map((line,idx)=>{
+    const cols = line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+    if(cols.length < 2){ errors.push(`第 ${idx+start+1} 列欄位不足`); return null; }
+    return { empId:cols[0], name:cols[1], dept:cols[2]||'', jobType:cols[3]||'', email:cols[4]||'', password:cols[5]||'' };
+  }).filter(Boolean);
+  if(errors.length){ errEl.textContent = errors.slice(0,3).join('；'); errEl.style.display='block'; }
+  document.getElementById('emp-upload-preview').textContent = parsedEmpUploadData.length ? `✅ 解析成功：共 ${parsedEmpUploadData.length} 筆資料` : '⚠️ 未解析到資料';
+}
+function confirmEmpUpload(){
+  const errEl = document.getElementById('emp-upload-err');
+  if(!parsedEmpUploadData.length){ errEl.textContent='請先選擇或貼上有效的 CSV 資料'; errEl.style.display='block'; return; }
+  if(!confirm(`確認上傳 ${parsedEmpUploadData.length} 筆員工資料？這將取代現有員工總表。`)) return;
+  const btn = document.getElementById('emp-upload-confirm-btn');
+  btn.textContent = '上傳中…'; btn.disabled = true;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'saveEmployeeMaster', list:parsedEmpUploadData }) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='error'){ errEl.textContent=d.message||'上傳失敗'; errEl.style.display='block'; return; }
+      closeEmpUploadModal();
+      loadEmployeeMaster();
+      alert(`✅ 上傳成功！共 ${d.count} 筆員工資料`);
+    })
+    .catch(()=>{ errEl.textContent='連線失敗，請稍後再試'; errEl.style.display='block'; })
+    .finally(()=>{ btn.textContent='確認上傳'; btn.disabled=false; });
+}
+
+// ═══════════ 管理員管理 ═══════════
+function loadAdminsFromGS(){
+  const el = document.getElementById('admin-list');
+  if(el) el.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--ink3)"><div class="spinner" style="margin:0 auto .5rem"></div><div>載入中…</div></div>';
+  fetch(`${GS_URL}?action=getAdmins`)
+    .then(r=>r.json())
+    .then(d=>{ renderAdminList(d.admins||[]); })
+    .catch(()=>{ if(el) el.innerHTML = '<div class="table-empty">❌ 無法連線至 Google 試算表</div>'; });
+}
+let cachedAdmins = [];
+function renderAdminList(list){
+  cachedAdmins = list;
+  const el = document.getElementById('admin-list');
+  if(!el) return;
+  if(!list.length){ el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--ink3)">尚無管理員資料</div>'; return; }
+  el.innerHTML = list.map(a=>`
+    <div class="admin-row">
+      <div class="admin-av">${a.name.charAt(0)}</div>
+      <div class="admin-info"><div class="admin-name">${a.name}</div><div class="admin-meta">${a.username}${a.email?' · '+a.email:''}</div></div>
+      <div class="admin-actions">
+        <span class="role-badge">${a.role}</span>
+        <button class="btn-sm btn-secondary" onclick="openAdminModal('${a.id}')">編輯</button>
+        <button class="btn-sm btn-danger" onclick="deleteAdmin('${a.id}')">刪除</button>
+      </div>
+    </div>`).join('');
+}
+function openAdminModal(id){
+  const isEdit = !!id;
+  document.getElementById('admin-modal-title').textContent = isEdit ? '編輯管理員' : '新增管理員';
+  document.getElementById('adm-err').style.display = 'none';
+  document.getElementById('adm-id').value = id || '';
+  document.getElementById('adm-pwd-label').innerHTML = isEdit ? '新密碼 <span style="color:var(--ink3);font-weight:400">（不修改請留空）</span>' : '密碼 <span style="color:var(--red)">*</span>';
+  document.getElementById('adm-pwd-hint').textContent = isEdit ? '留空表示不變更密碼' : '';
+  if(isEdit){
+    const a = cachedAdmins.find(x=>x.id===id);
+    document.getElementById('adm-name').value = a.name;
+    document.getElementById('adm-username').value = a.username;
+    document.getElementById('adm-email').value = a.email || '';
+    document.getElementById('adm-role').value = a.role;
+    document.getElementById('adm-pwd').value = '';
+  } else {
+    ['adm-name','adm-username','adm-email','adm-pwd'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('adm-role').value = '超級管理員';
+  }
+  document.getElementById('modal-admin').classList.add('open');
+}
+function closeAdminModal(){ document.getElementById('modal-admin').classList.remove('open'); }
+document.getElementById('modal-admin').addEventListener('click', function(e){ if(e.target===this) closeAdminModal(); });
+function saveAdmin(){
+  const id = document.getElementById('adm-id').value;
+  const name = document.getElementById('adm-name').value.trim();
+  const username = document.getElementById('adm-username').value.trim();
+  const email = document.getElementById('adm-email').value.trim();
+  const role = document.getElementById('adm-role').value;
+  const pwd = document.getElementById('adm-pwd').value;
+  const errEl = document.getElementById('adm-err');
+  const saveBtn = document.querySelector('#modal-admin .btn-primary');
+  errEl.style.display = 'none';
+  if(!name || !username){ errEl.textContent='姓名與帳號為必填'; errEl.style.display='block'; return; }
+  if(!id && !pwd){ errEl.textContent='新增管理員時密碼為必填'; errEl.style.display='block'; return; }
+  const dup = cachedAdmins.find(a=>a.username===username && a.id!==id);
+  if(dup){ errEl.textContent='此帳號已存在，請使用其他帳號'; errEl.style.display='block'; return; }
+  saveBtn.textContent='儲存中…'; saveBtn.disabled=true;
+  const payload = id
+    ? { action:'updateAdmin', id, name, username, email, role, ...(pwd?{password:pwd}:{}) }
+    : { action:'addAdmin', id:Date.now().toString(), name, username, email, role, password:pwd };
+  fetch(GS_URL, { method:'POST', body:JSON.stringify(payload) })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.status==='error'){ errEl.textContent=d.message||'儲存失敗'; errEl.style.display='block'; return; }
+      closeAdminModal();
+      loadAdminsFromGS();
+    })
+    .catch(()=>{ errEl.textContent='連線失敗，請稍後再試'; errEl.style.display='block'; })
+    .finally(()=>{ saveBtn.textContent='儲存'; saveBtn.disabled=false; });
+}
+function deleteAdmin(id){
+  if(cachedAdmins.length <= 1){ alert('至少須保留一位管理員'); return; }
+  const a = cachedAdmins.find(x=>x.id===id);
+  if(!confirm(`確定要刪除管理員「${a.name}」？`)) return;
+  fetch(GS_URL, { method:'POST', body:JSON.stringify({ action:'deleteAdmin', id }) })
+    .then(r=>r.json())
+    .then(()=>loadAdminsFromGS())
+    .catch(()=>alert('連線失敗，請稍後再試'));
+}
+</script>
+</body>
+</html>
