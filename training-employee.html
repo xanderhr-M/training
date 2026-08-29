@@ -158,6 +158,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--i
     <div class="form-group"><label>密碼</label><input type="password" id="login-pwd" placeholder="請輸入密碼(預設為員工工號, 登入後請修改密碼)" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div id="login-err" style="color:var(--red);font-size:.82rem;margin-bottom:.9rem;display:none"></div>
     <button class="btn btn-primary" style="width:100%;padding:.72rem;font-size:.92rem" onclick="doLogin()" id="btn-lookup">登入</button>
+    <div style="text-align:center;margin-top:.9rem">
+      <a href="javascript:void(0)" onclick="doForgotPassword()" id="forgot-link" style="font-size:.82rem;color:var(--ink3);text-decoration:underline">忘記密碼？</a>
+    </div>
+    <div id="forgot-msg" style="font-size:.82rem;margin-top:.5rem;display:none"></div>
   </div>
 </div>
 
@@ -393,6 +397,32 @@ async function doLogin(){
   userData = { empId, name: result.name, dept: result.dept };
   updateSidebarUserInfo();
   goCourses();
+}
+
+async function doForgotPassword(){
+  const empId = document.getElementById('login-empid').value.trim().toUpperCase();
+  const msgEl = document.getElementById('forgot-msg');
+  const linkEl = document.getElementById('forgot-link');
+  if(!empId){
+    msgEl.style.color = 'var(--red)'; msgEl.textContent = '請先在上方輸入工號';
+    msgEl.style.display = 'block';
+    return;
+  }
+  linkEl.textContent = '寄送中…';
+  msgEl.style.display = 'none';
+  try{
+    const r = await fetch(GOOGLE_SCRIPT_URL, { method:'POST', body:JSON.stringify({ action:'forgotPassword', empId }) });
+    const d = await r.json();
+    if(d.status === 'ok'){
+      msgEl.style.color = 'var(--green)'; msgEl.textContent = `密碼已寄送到您的信箱（${d.email || ''}），請至信箱查收`;
+    } else {
+      msgEl.style.color = 'var(--red)'; msgEl.textContent = d.message || '寄送失敗，請確認工號是否正確';
+    }
+  }catch(e){
+    msgEl.style.color = 'var(--red)'; msgEl.textContent = '連線失敗，請稍後再試';
+  }
+  linkEl.textContent = '忘記密碼？';
+  msgEl.style.display = 'block';
 }
 
 // ═══════════════ 員工入口（側邊欄分頁） ═══════════════
