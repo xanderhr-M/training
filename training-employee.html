@@ -101,7 +101,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--i
 @keyframes cc-blink{50%{opacity:0}}
 .cc-enter-btn{margin-top:.75rem;width:100%;text-align:center;display:block}
 .cc-completed-btn{background:var(--green);color:#fff}
-.cc-name-row{font-size:1.02rem;color:var(--ink);cursor:pointer;margin-bottom:.5rem}
+.cc-name-row{font-size:1.02rem;color:var(--ink);cursor:pointer;margin-bottom:.5rem;line-height:1.4;min-height:2.8em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cc-name-row:hover{color:var(--accent)}
 .cc-name-row strong{font-weight:700}
 .course-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
@@ -324,7 +324,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--i
 
 <script>
 // ═══════════════ GOOGLE SHEETS ═══════════════
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyKCEB0e9KwSyBWQ9gn3VUCyt6D4ePq0nPTOnSLHsXTc1I3GtyPlRtuRoN-X583bu5vAQ/exec';
+const GOOGLE_SCRIPT_URL = 'https://qlnszjymedxeaevwjysn.supabase.co/functions/v1/api';
 
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function formatMinSec(seconds){
@@ -448,6 +448,7 @@ function pendingCardHtml(c){
     <div class="cc-name-row" data-open-course="${escapeHtml(c.courseId)}"><strong>課程名稱：</strong>${escapeHtml(c.courseName)}</div>
     <div class="cc-meta${isOverdue ? ' cc-overdue-text' : ''}">完成期限：${escapeHtml(c.deadline || '無期限')}${isOverdue ? ' <span class="cc-overdue-badge">⚠ 已逾期</span>' : ''}</div>
     <div class="cc-meta">課程類型：${escapeHtml(c.courseType || '未分類')}</div>
+    <div class="cc-meta">上課方式：${c.trainingMode === '實體' ? '實體' : '線上'}</div>
     <div class="cc-meta">課程時數：${escapeHtml(c.courseHours || '未提供')}</div>
     <div class="cc-meta">影片觀看：${videoText}</div>
     <div class="cc-meta">測驗：${quizText}</div>
@@ -462,6 +463,7 @@ function completedCardHtml(c){
     <div class="cc-name-row" data-open-course="${escapeHtml(c.courseId)}"><strong>課程名稱：</strong>${escapeHtml(c.courseName)}</div>
     <div class="cc-meta">完成日期：${escapeHtml(formatTimestamp(c.completedAt))}</div>
     <div class="cc-meta">課程類型：${escapeHtml(c.courseType || '未分類')}</div>
+    <div class="cc-meta">上課方式：${c.trainingMode === '實體' ? '實體' : '線上'}</div>
     <div class="cc-meta">課程時數：${escapeHtml(c.courseHours || '未提供')}</div>
     <div class="cc-meta">影片觀看：${videoText}</div>
     <div class="cc-meta">測驗：${quizText}</div>
